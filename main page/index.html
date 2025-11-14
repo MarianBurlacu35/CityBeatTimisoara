@@ -67,6 +67,12 @@
       .then(r => r.text())
       .then(html => {
         document.getElementById('site-header').innerHTML = html;
+        // show top-nav on non-landing pages (hide only on landing)
+        const top = document.querySelector('.top-nav');
+        if (top) {
+          if (location.pathname.includes('/landingPage/')) top.style.display = 'none';
+          else top.style.display = '';
+        }
         // after injecting header, append 4 text buttons next to the logo
         const left = document.querySelector('.navbar-left');
         if(left){
@@ -83,7 +89,7 @@
             if(label === 'Home') btn.addEventListener('click', () => location.href = '/');
             else if(label === 'Events') btn.addEventListener('click', () => location.href = '/landingPage/landingPage.html');
             else if(label === 'About Us') btn.addEventListener('click', () => location.href = '/AboutUs/index.html');
-            else if(label === 'Contact Us') btn.addEventListener('click', () => location.href = '/landingPage/landingPage.html#contact');
+            else if(label === 'Contact Us') btn.addEventListener('click', () => location.href = '/contact-us/index.html');
             nav.appendChild(btn);
           });
             left.appendChild(nav);

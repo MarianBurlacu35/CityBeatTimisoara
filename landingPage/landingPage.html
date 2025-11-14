@@ -75,7 +75,12 @@
     // load the header fragment and insert into the page (from top-level header/ folder)
     fetch('../header/header.html')
       .then(r => r.text())
-      .then(html => { document.getElementById('site-header').innerHTML = html; })
+      .then(html => {
+        document.getElementById('site-header').innerHTML = html;
+        // On landing page we hide the top-nav buttons
+        const top = document.querySelector('.top-nav');
+        if (top) top.style.display = 'none';
+      })
       .catch(e => console.warn('Failed to load header:', e));
   </script>
 

@@ -49,6 +49,12 @@
       .then(r => r.text())
       .then(html => {
         document.getElementById('site-header').innerHTML = html;
+        // ensure nav is visible on non-landing pages
+        const top = document.querySelector('.top-nav');
+        if (top) {
+          if (location.pathname.includes('/landingPage/')) top.style.display = 'none';
+          else top.style.display = '';
+        }
         const left = document.querySelector('.navbar-left');
         if(left){
           // only add nav if header fragment didn't already include it
@@ -63,7 +69,7 @@
             if(label === 'Home') btn.addEventListener('click', () => location.href = '/');
             else if(label === 'Events') btn.addEventListener('click', () => location.href = '/landingPage/landingPage.html');
             else if(label === 'About Us') btn.addEventListener('click', () => location.href = '/AboutUs/index.html');
-            else if(label === 'Contact Us') btn.addEventListener('click', () => location.href = '/landingPage/landingPage.html#contact');
+            else if(label === 'Contact Us') btn.addEventListener('click', () => location.href = '/contact-us/index.html');
             nav.appendChild(btn);
           });
             left.appendChild(nav);

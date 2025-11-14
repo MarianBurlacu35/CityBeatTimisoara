@@ -1,0 +1,92 @@
+/* Contact page styles - aligned with AboutUs / main page look */
+:root{
+  --purple: #520298;
+  --muted-bg: #f7f7f9;
+  --card-bg: #ffffff;
+}
+body{
+  font-family: Inter, system-ui, Arial, sans-serif;
+  margin:0;
+  background: var(--muted-bg);
+  color:#111;
+}
+.contact-main{
+  max-width:1000px;
+  margin: 40px auto 120px;
+  padding: 0 20px;
+}
+.contact-inner{
+  background: var(--card-bg);
+  padding: 28px 36px;
+  text-align: center;
+  border-radius: 12px;
+  box-shadow: 0 6px 24px rgba(16,24,40,0.08);
+  margin: 0 auto;
+}
+.contact-inner h1{
+  font-size: 28px;
+  margin: 6px 0 22px;
+  color: #0b1020;
+}
+.contact-inner label{
+  display:block;
+  text-align:left;
+  margin: 12px 0 6px;
+  font-weight:600;
+}
+.contact-inner select,
+.contact-inner textarea{
+  width:100%;
+  max-width:720px;
+  margin: 0 auto 16px;
+  display:block;
+  border: none;
+  background: #fff;
+  border-radius: 10px;
+  padding: 12px 14px;
+  box-shadow: 0 1px 2px rgba(16,24,40,0.04), inset 0 1px 0 rgba(0,0,0,0.02);
+  font-size: 14px;
+  color: #222;
+}
+.contact-inner select{ height:44px; }
+.contact-inner textarea{ min-height:140px; resize:vertical; }
+.actions{ margin-top: 18px; }
+.send{
+  background: var(--purple);
+  color: #fff;
+  border:none;
+  padding: 10px 28px;
+  border-radius: 20px;
+  box-shadow: 0 8px 18px rgba(82,2,152,0.14);
+  cursor: pointer;
+  font-weight:600;
+  display: inline-block;
+}
+.send:active{ transform: translateY(1px); }
+
+/* small success bubble */
+.submit-success{
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 80px;
+  background: #111;
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 999px;
+  opacity:0; transition: opacity 200ms, transform 200ms;
+  z-index: 1200;
+}
+.submit-success.visible{ opacity: 1; transform: translateX(-50%) translateY(-6px); }
+
+/* responsive tweaks */
+@media (max-width:680px){
+  .contact-inner{ padding: 12px 18px; }
+  .contact-inner h1{ font-size:22px; }
+  .contact-inner select, .contact-inner textarea{ max-width:100%; }
+}
+
+/* ensure the card doesn't stretch too wide on desktop */
+@media (min-width:681px){
+  .contact-inner{ max-width:720px; }
+}
