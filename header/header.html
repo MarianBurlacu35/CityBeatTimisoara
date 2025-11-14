@@ -7,9 +7,25 @@
   </div>
 
   <div class="navbar-right">
-    <a href="#" class="nav-link">Explore</a>
-    <a href="#" class="nav-link">Create</a>
-    <button class="btn-login">Log in</button>
-    <button class="btn-signup">Sign up</button>
+  <!-- open modal via hash target so it works when header is injected -->
+  <a href="#auth-modal" class="nav-link">Explore</a>
+  <a href="#auth-modal" class="nav-link">Create</a>
+  <button type="button" class="btn-login" onclick="location.href='/logIn/login.html'">Log in</button>
+  <button type="button" class="btn-signup" onclick="location.href='/logIn/register.html'">Sign up</button>
   </div>
 </nav>
+
+<!-- Auth modal (opened by linking to #auth-modal) -->
+<div id="auth-modal" class="auth-modal" aria-hidden="true">
+  <div class="auth-modal__overlay" tabindex="-1"></div>
+  <div class="auth-modal__panel" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+    <button class="auth-modal__close" aria-label="Close" onclick="location.hash='';">×</button>
+    <h3 id="auth-modal-title">Please sign in or create an account</h3>
+    <p class="auth-modal__desc">To continue you need an account. Choose an option:</p>
+
+    <div class="auth-modal__actions">
+      <a class="modal-btn modal-btn-login" href="/logIn/login.html">Log in</a>
+      <a class="modal-btn modal-btn-signup" href="/logIn/register.html">Sign up</a>
+    </div>
+  </div>
+</div>
