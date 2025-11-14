@@ -112,5 +112,21 @@
       }
     })();
   </script>
+  <script>
+    // mark user as logged in when login form is submitted (client-only demo)
+    (function(){
+      const loginForm = document.querySelector('.login-form');
+      if(loginForm){
+        loginForm.addEventListener('submit', function(e){
+          // prevent default so we can set a flag and redirect
+          // in a real app you'd verify credentials on the server
+          e.preventDefault();
+          localStorage.setItem('isLoggedIn','1');
+          // redirect to main page folder (space encoded)
+          window.location.href = '/main%20page/index.html';
+        });
+      }
+    })();
+  </script>
 </body>
 </html>

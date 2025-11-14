@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>About CityBeat</title>
+  <link rel="stylesheet" href="/header/header.css">
+  <link rel="stylesheet" href="about.css">
+  <style>/* small fallback if css fails */
+    body{margin:0;font-family:Segoe UI,Roboto,Arial,sans-serif}
+  </style>
+</head>
+<body>
+  <!-- shared header will be injected here -->
+  <div id="site-header"></div>
+
+  <main class="container page">
+    <section class="about-hero">
+      <h1>About CityBeat</h1>
+      <h2>Our Team</h2>
+    </section>
+
+    <section class="team-row">
+      <div class="member">
+        <div class="avatar" aria-hidden="true"><span>M</span></div>
+        <h3>Marian</h3>
+        <div class="role">FrontEnd Developer</div>
+      </div>
+
+      <div class="member">
+        <div class="avatar" aria-hidden="true"><span>Ma</span></div>
+        <h3>Matei</h3>
+        <div class="role">BackEnd Developer</div>
+      </div>
+    </section>
+
+    <section class="about-app">
+      <h2>About the App</h2>
+      <p>CityBeat is your go-to app for discovering and bookmarking public events in your city. We aim to make it easy for you to find exciting activities and never miss out on what's happening around you. Version 1.2.3</p>
+    </section>
+</main>
+
+  <!-- footer injected from separate folder -->
+  <div id="site-footer"></div>
+
+  <script>
+    // fetch shared header then add the 4 nav text buttons next to the logo
+    fetch('/header/header.html')
+      .then(r => r.text())
+      .then(html => {
+        document.getElementById('site-header').innerHTML = html;
+        const left = document.querySelector('.navbar-left');
+        if(left){
+          // only add nav if header fragment didn't already include it
+          if (!left.querySelector('.top-nav')) {
+            const nav = document.createElement('nav');
+            nav.className = 'top-nav';
+            ['Home','Events','About Us','Contact Us'].forEach(label => {
+            const btn = document.createElement('button');
+            btn.className = 'nav-text';
+            btn.type = 'button';
+            btn.textContent = label;
+            if(label === 'Home') btn.addEventListener('click', () => location.href = '/');
+            else if(label === 'Events') btn.addEventListener('click', () => location.href = '/landingPage/landingPage.html');
+            else if(label === 'About Us') btn.addEventListener('click', () => location.href = '/AboutUs/index.html');
+            else if(label === 'Contact Us') btn.addEventListener('click', () => location.href = '/landingPage/landingPage.html#contact');
+            nav.appendChild(btn);
+          });
+            left.appendChild(nav);
+          }
+        }
+        // disable the auth modal on this page (hide/remove it)
+        const authModal = document.getElementById('auth-modal');
+        if (authModal) {
+          // remove modal from DOM so anchors to #auth-modal do nothing here
+          authModal.remove();
+        }
+      })
+      .catch(e => console.warn('Header load failed', e));
+
+    fetch('/footer/footer.html')
+      .then(r => r.text())
+      .then(html => document.getElementById('site-footer').innerHTML = html)
+      .catch(e => console.warn('Footer load failed', e));
+    
+    // member modal markup insertion and handlers
+    (function(){
+      // append modal HTML to body
+      const modalHTML = `
+      <div class="member-modal" id="member-modal" aria-hidden="true">
+        <div class="overlay" id="member-modal-overlay"></div>
+        <div class="panel" role="dialog" aria-modal="true">
+          <button class="close-btn" id="member-modal-close">×</button>
+          <div class="modal-left">
+            <div class="modal-avatar" id="modal-avatar">M</div>
+            <div class="modal-name" id="modal-name">Name</div>
+            <div class="modal-role" id="modal-role">Role</div>
+          </div>
+          <div class="modal-right">
+            <div class="desc" id="modal-desc">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</div>
+            <div class="socials-row" id="modal-socials">
+              <a href="#" id="modal-fb"><img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/facebook.svg" alt="facebook"></a>
+              <a href="#" id="modal-ig"><img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/instagram.svg" alt="instagram"></a>
+              <a href="#" id="modal-li"><img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/linkedin.svg" alt="linkedin"></a>
+            </div>
+          </div>
+        </div>
+      </div>`;
+      document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+      const modal = document.getElementById('member-modal');
+      const overlay = document.getElementById('member-modal-overlay');
+      const closeBtn = document.getElementById('member-modal-close');
+
+      function openMemberModal(data){
+        // populate
+        document.getElementById('modal-name').textContent = data.name;
+        document.getElementById('modal-role').textContent = data.role;
+        document.getElementById('modal-desc').textContent = data.desc || 'No description provided.';
+        document.getElementById('modal-avatar').textContent = data.initials || data.name.charAt(0);
+        // set social links if provided
+        if(data.fb) document.getElementById('modal-fb').href = data.fb;
+        if(data.ig) document.getElementById('modal-ig').href = data.ig;
+        if(data.li) document.getElementById('modal-li').href = data.li;
+        modal.classList.add('open');
+      }
+
+      function closeMemberModal(){ modal.classList.remove('open'); }
+      overlay.addEventListener('click', closeMemberModal);
+      closeBtn.addEventListener('click', closeMemberModal);
+
+      // wire avatars after DOM ready
+      document.addEventListener('click', function(e){
+        const av = e.target.closest('.avatar');
+        if(!av) return;
+        // find parent member element
+        const memberEl = av.closest('.member');
+        if(!memberEl) return;
+        const name = memberEl.querySelector('h3')?.textContent || 'Member';
+        const role = memberEl.querySelector('.role')?.textContent || '';
+        const initials = av.textContent.trim();
+        // sample description
+        const desc = name + ' is part of CityBeat. ' + 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.';
+        openMemberModal({name, role, initials, desc, fb:'#', ig:'#', li:'#'});
+      }, {capture:false});
+    })();
+  </script>
+</body>
+</html>

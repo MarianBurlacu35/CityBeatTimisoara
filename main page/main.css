@@ -1,0 +1,39 @@
+/* Main page styles (simple layout approximating the screenshot) */
+:root{--purple:#7514C9;--muted:#666}
+*{box-sizing:border-box}
+body{font-family:Segoe UI, Roboto, Arial, sans-serif;margin:0;background:#f6f6f8;color:#111}
+
+/* Header */
+.main-header{background:var(--purple);color:#fff;padding:12px 20px}
+.header-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:14px}
+.brand-logo{width:42px;height:42px}
+.brand-title{font-weight:800;font-size:20px}
+.top-nav{display:flex;gap:14px;margin-left:8px}
+.top-nav .nav-text{background:transparent;border:none;color:#fff;font-weight:600;cursor:pointer}
+.header-right{display:flex;align-items:center;gap:12px}
+.search{padding:8px 12px;border-radius:20px;border:none;width:240px}
+
+/* Hero */
+.hero{max-width:1100px;margin:22px auto;background:#111 url('../Imagini_landingPage/background.jfif') center/cover no-repeat;border-radius:10px;padding:36px;color:#fff}
+.hero-inner{max-width:700px}
+.hero h1{margin:0 0 8px;font-size:28px}
+.hero p{margin:0 0 18px;color:#ddd}
+.cta{display:inline-block;background:#7514C9;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:700}
+
+/* Featured */
+.content{max-width:1100px;margin:22px auto;padding:0 16px}
+.featured h2,.categories h2,.upcoming h2{margin:0 0 12px}
+.cards{display:flex;gap:18px}
+.card{background:#fff;border-radius:10px;padding:12px;flex:1;box-shadow:0 6px 18px rgba(0,0,0,0.06);text-align:left}
+.card img{width:100%;height:120px;object-fit:cover;border-radius:6px}
+.card h3{margin:10px 0 6px;font-size:16px}
+.card p{margin:0;color:var(--muted)}
+.cards.small .card img{height:100px}
+
+.categories .cats{display:flex;gap:12px;flex-wrap:wrap}
+.cat{background:#fff;padding:12px 14px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,0.06)}
+
+/* footer placeholder will come from footer fragment */
+
+@media(max-width:820px){.cards{flex-direction:column}.header-inner{padding:0 8px}.search{width:120px}}
