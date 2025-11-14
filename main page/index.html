@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CityBeat — Main Page</title>
+  <link rel="stylesheet" href="main.css">
+  <link rel="stylesheet" href="/header/header.css">
+</head>
+<body>
+  <!-- auth gate: redirect to login if not logged in -->
+  <script>
+    if (!localStorage.getItem('isLoggedIn')) {
+      // not logged in -> send to login page
+      window.location.href = '/logIn/login.html';
+    }
+  </script>
+
+  <!-- Shared header will be injected here -->
+  <div id="site-header"></div>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-inner">
+      <h1>Discover Your City's Pulse</h1>
+      <p>Explore events, connect with locals, and experience the best our city has to offer.</p>
+      <a class="cta" href="#">Explore Events</a>
+    </div>
+  </section>
+
+  <main class="content">
+    <section class="featured">
+      <h2>Featured Events</h2>
+      <div class="cards">
+          <article class="card"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='360'%3E%3Crect fill='%23dddddd' rx='8' width='100%25' height='100%25'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23888' font-family='Arial' font-size='20'%3EPlaceholder%3C/text%3E%3C/svg%3E" alt="placeholder"><h3>Beach Please Festival</h3><p>Experience the energy of live music.</p></article>
+          <article class="card"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='360'%3E%3Crect fill='%23dddddd' rx='8' width='100%25' height='100%25'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23888' font-family='Arial' font-size='20'%3EPlaceholder%3C/text%3E%3C/svg%3E" alt="placeholder"><h3>Taste of the City Food Fest</h3><p>Indulge in a culinary journey.</p></article>
+          <article class="card"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='360'%3E%3Crect fill='%23dddddd' rx='8' width='100%25' height='100%25'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23888' font-family='Arial' font-size='20'%3EPlaceholder%3C/text%3E%3C/svg%3E" alt="placeholder"><h3>Art & Culture Showcase</h3><p>Immerse your self in creativity.</p></article>
+        </div>
+    </section>
+
+    <section class="categories">
+      <h2>Categories</h2>
+      <div class="cats">
+        <div class="cat">Music</div>
+        <div class="cat">Art & Culture</div>
+        <div class="cat">Food & Drink</div>
+        <div class="cat">Sports</div>
+        <div class="cat">Community</div>
+        <div class="cat">Others</div>
+      </div>
+    </section>
+
+    <section class="upcoming">
+      <h2>Upcoming Events</h2>
+      <div class="cards small">
+  <article class="card"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='360'%3E%3Crect fill='%23dddddd' rx='8' width='100%25' height='100%25'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23888' font-family='Arial' font-size='20'%3EPlaceholder%3C/text%3E%3C/svg%3E" alt="placeholder"><h3>Photography Workshop</h3><p>Learn from professionals.</p></article>
+  <article class="card"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='360'%3E%3Crect fill='%23dddddd' rx='8' width='100%25' height='100%25'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23888' font-family='Arial' font-size='20'%3EPlaceholder%3C/text%3E%3C/svg%3E" alt="placeholder"><h3>Local Band Night</h3><p>Discover new local talent.</p></article>
+  <article class="card"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='360'%3E%3Crect fill='%23dddddd' rx='8' width='100%25' height='100%25'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23888' font-family='Arial' font-size='20'%3EPlaceholder%3C/text%3E%3C/svg%3E" alt="placeholder"><h3>Basketball Tournament</h3><p>Watch exciting games.</p></article>
+      </div>
+    </section>
+  </main>
+  <!-- footer injected from separate folder -->
+  <div id="site-footer"></div>
+  <script>
+    // fetch shared header then add the 4 nav text buttons next to the logo
+    fetch('/header/header.html')
+      .then(r => r.text())
+      .then(html => {
+        document.getElementById('site-header').innerHTML = html;
+        // after injecting header, append 4 text buttons next to the logo
+        const left = document.querySelector('.navbar-left');
+        if(left){
+          // only add nav if header fragment didn't already include it
+          if (!left.querySelector('.top-nav')) {
+            const nav = document.createElement('nav');
+            nav.className = 'top-nav';
+            ['Home','Events','About Us','Contact Us'].forEach(label => {
+            const btn = document.createElement('button');
+            btn.className = 'nav-text';
+            btn.type = 'button';
+            btn.textContent = label;
+            // wire navigation for each label
+            if(label === 'Home') btn.addEventListener('click', () => location.href = '/');
+            else if(label === 'Events') btn.addEventListener('click', () => location.href = '/landingPage/landingPage.html');
+            else if(label === 'About Us') btn.addEventListener('click', () => location.href = '/AboutUs/index.html');
+            else if(label === 'Contact Us') btn.addEventListener('click', () => location.href = '/landingPage/landingPage.html#contact');
+            nav.appendChild(btn);
+          });
+            left.appendChild(nav);
+          }
+        }
+      })
+      .catch(e => console.warn('Header load failed', e));
+
+    fetch('/footer/footer.html')
+      .then(r => r.text())
+      .then(html => document.getElementById('site-footer').innerHTML = html)
+      .catch(e => console.warn('Footer load failed', e));
+  </script>
+</body>
+</html>

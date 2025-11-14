@@ -1,15 +1,21 @@
 <nav class="navbar">
   <div class="navbar-left">
     <div class="logo-wrap">
-      <img src="../Imagini_landingPage/CityBeat.png" alt="CityBeat" class="logo-img">
+      <img src="/Imagini_landingPage/CityBeat.png" alt="CityBeat" class="logo-img">
     </div>
     <span class="logo-text">CityBeat</span>
+    <nav class="top-nav">
+  <a class="nav-text" href="/main%20page/index.html">Home</a>
+      <a class="nav-text" href="/landingPage/landingPage.html">Events</a>
+      <a class="nav-text" href="/AboutUs/index.html">About Us</a>
+      <a class="nav-text" href="/landingPage/landingPage.html#contact">Contact Us</a>
+    </nav>
   </div>
 
   <div class="navbar-right">
-  <!-- open modal via hash target so it works when header is injected -->
-  <a href="#auth-modal" class="nav-link">Explore</a>
-  <a href="#auth-modal" class="nav-link">Create</a>
+  <!-- open modal via hash target so it works when header is injected; disable modal unless we're on the landing page -->
+  <a href="#auth-modal" class="nav-link" onclick="(function(e){ if(!location.pathname.includes('/landingPage/')){ e.preventDefault(); } })(event)">Explore</a>
+  <a href="#auth-modal" class="nav-link" onclick="(function(e){ if(!location.pathname.includes('/landingPage/')){ e.preventDefault(); } })(event)">Create</a>
   <button type="button" class="btn-login" onclick="location.href='/logIn/login.html'">Log in</button>
   <button type="button" class="btn-signup" onclick="location.href='/logIn/register.html'">Sign up</button>
   </div>
