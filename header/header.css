@@ -1,0 +1,86 @@
+/* Navbar styles extracted to header.css */
+.navbar {
+  width: 100%;
+  background: #7514C9;
+  color: white;
+  padding: 0 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-sizing: border-box;
+  height: 74px; /* reduced by 15px (was 89px) */
+}
+
+.navbar-left { display: flex; align-items: center; }
+
+.logo-wrap{ width: 54px; height: 54px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #7514C9; }
+.logo-img{ height: 54px; width: auto; display: block; }
+.logo-text { margin-left: 12px; font-weight: 700; font-size: 20px; color: #fff; }
+
+.navbar-right { display: flex; align-items: center; gap: 16px; }
+.nav-link { color: white; text-decoration: none; }
+
+/* reduce spacing between Explore and Create by 2px */
+.nav-link + .nav-link { margin-left: -2px; }
+/* reduce spacing between login and signup by 2px */
+.btn-login + .btn-signup { margin-left: -2px; }
+
+/* login/signup sizes/colors - buttons (center text, non-link) */
+.btn-login, .btn-signup{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer; /* clickable */
+  text-align: center;
+  transition: transform 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
+}
+.btn-login{
+  background: #C3A6DC;
+  color: #000;
+  width: 91px;
+  height: 38px;
+}
+.btn-signup{
+  background: #FFFFFF;
+  color: #000;
+  width: 79px;
+  height: 38px;
+}
+
+/* pressed (active) visual effect */
+.btn-login:active, .btn-signup:active{
+  transform: translateY(1px) scale(0.995);
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.08);
+  opacity: 0.98;
+}
+
+/* small press effect for nav links (Explore/Create) */
+.nav-link:active{
+  transform: translateY(1px) scale(0.996);
+  transition: transform 120ms ease;
+}
+
+/* modal styles (opened via #auth-modal target) */
+.auth-modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;transition:opacity 180ms ease;z-index:1200}
+.auth-modal:target{pointer-events:auto;opacity:1}
+.auth-modal__overlay{position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,0.45),rgba(0,0,0,0.45));backdrop-filter:blur(2px)}
+.auth-modal__panel{position:relative;z-index:2;background:#fff;border-radius:12px;padding:24px 28px;max-width:560px;width:92%;box-shadow:0 30px 60px rgba(0,0,0,0.25);text-align:center;max-height:calc(100vh - 200px);overflow:auto}
+.auth-modal__close{position:absolute;right:12px;top:8px;background:transparent;border:none;font-size:20px;line-height:1;color:#333;cursor:pointer}
+.auth-modal__panel h3{margin:0 0 6px;font-size:22px}
+.auth-modal__desc{color:#666;margin:0 0 18px}
+.auth-modal__actions{display:flex;gap:22px;justify-content:center;margin-top:18px}
+
+/* modal buttons: preserve header colors and aspect ratio-ish */
+.modal-btn{display:inline-flex;align-items:center;justify-content:center;border-radius:10px;padding:12px 28px;text-decoration:none;font-weight:700;box-shadow:0 8px 18px rgba(0,0,0,0.12);min-height:48px}
+.modal-btn-login{background:#7514C9;color:#fff}
+.modal-btn-signup{background:#FFFFFF;color:#000;border:2px solid rgba(0,0,0,0.06)}
+
+/* press animation for modal buttons */
+.modal-btn:active{transform:translateY(2px) scale(0.995);box-shadow:inset 0 4px 12px rgba(0,0,0,0.08)}
+
+/* ensure modal is accessible/visible on small screens */
+@media(max-width:480px){.auth-modal__panel{padding:20px}.auth-modal__actions{flex-direction:column;gap:12px}.modal-btn{width:100%;min-height:48px}}

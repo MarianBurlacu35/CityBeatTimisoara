@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CityBeat - Landing Page</title>
+  <link rel="stylesheet" href="../header/header.css">
+  <link rel="stylesheet" href="landinPage.css">
+</head>
+<body>
+
+  <!-- HEADER (loaded from header.html) -->
+  <div id="site-header"></div>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-image">
+      <div class="hero-overlay">
+        <h1 class="hero-title">Discover Your City’s Pulse</h1>
+
+        <p class="hero-subtext">
+          CityBeat is your go-to platform for discovering and engaging with local
+          events, initiatives, and classes. Explore a diverse range of activities,
+          all in one place.
+        </p>
+
+        <div class="hero-buttons">
+          <button class="btn-filled">Explore Events</button>
+          <button class="btn-outline-dark">Create Event</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- UPCOMING EVENTS -->
+  <section class="events-section">
+    <h2 class="section-title">Upcoming Events</h2>
+
+    <div class="events-wrapper">
+      <div class="events-grid">
+        <div class="event-card">
+          <div class="event-img" style="background-image: url('../Imagini_landingPage/cooking.png')"></div>
+          <h3 class="event-title">Cooking Class</h3>
+          <p class="event-desc">Learn to cook delicious meals from scratch.</p>
+        </div>
+
+        <div class="event-card">
+          <div class="event-img" style="background-image: url('../Imagini_landingPage/music.png')"></div>
+          <h3 class="event-title">Music Festival</h3>
+          <p class="event-desc">Experience live music and great energy.</p>
+        </div>
+
+        <div class="event-card">
+          <div class="event-img" style="background-image: url('../Imagini_landingPage/paint.png')"></div>
+          <h3 class="event-title">Art Workshop</h3>
+          <p class="event-desc">Unleash your creativity with painting.</p>
+        </div>
+
+        <div class="event-card">
+          <div class="event-img" style="background-image: url('../Imagini_landingPage/danceClass.png')"></div>
+          <h3 class="event-title">Dance Class</h3>
+          <p class="event-desc">Learn the basics of salsa dancing.</p>
+        </div>
+
+        <div class="event-card">
+          <div class="event-img" style="background-image: url('../Imagini_landingPage/fitness.png')"></div>
+          <h3 class="event-title">Fitness & Wellness</h3>
+          <p class="event-desc">Join relaxing yoga and stretching sessions.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // load the header fragment and insert into the page (from top-level header/ folder)
+    fetch('../header/header.html')
+      .then(r => r.text())
+      .then(html => { document.getElementById('site-header').innerHTML = html; })
+      .catch(e => console.warn('Failed to load header:', e));
+  </script>
+
+  <script type="module" src="../dist/main.js"></script>
+</body>
+</html>
