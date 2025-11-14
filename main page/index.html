@@ -67,12 +67,12 @@
       .then(r => r.text())
       .then(html => {
         document.getElementById('site-header').innerHTML = html;
-        // show top-nav on non-landing pages (hide only on landing)
-        const top = document.querySelector('.top-nav');
-        if (top) {
-          if (location.pathname.includes('/landingPage/')) top.style.display = 'none';
-          else top.style.display = '';
-        }
+  // show nav, search and user buttons on non-landing pages; hide auth buttons and Explore/Create
+  const top = document.querySelector('.top-nav'); if (top) top.style.display = '';
+  const search = document.querySelector('.search-group'); if (search) search.style.display = 'flex';
+  const userBtns = document.querySelector('.user-buttons'); if (userBtns) userBtns.style.display = 'flex';
+  const auth = document.querySelector('.auth-buttons'); if (auth) auth.style.display = 'none';
+  const exploreGroup = document.querySelector('.explore-create'); if (exploreGroup) exploreGroup.style.display = 'none';
         // after injecting header, append 4 text buttons next to the logo
         const left = document.querySelector('.navbar-left');
         if(left){

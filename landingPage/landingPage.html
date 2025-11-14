@@ -77,9 +77,12 @@
       .then(r => r.text())
       .then(html => {
         document.getElementById('site-header').innerHTML = html;
-        // On landing page we hide the top-nav buttons
-        const top = document.querySelector('.top-nav');
-        if (top) top.style.display = 'none';
+  // On landing page show Explore/Create and auth buttons; hide search and user buttons
+  const top = document.querySelector('.top-nav'); if (top) top.style.display = 'none';
+  const search = document.querySelector('.search-group'); if (search) search.style.display = 'none';
+  const userBtns = document.querySelector('.user-buttons'); if (userBtns) userBtns.style.display = 'none';
+  const auth = document.querySelector('.auth-buttons'); if (auth) auth.style.display = 'flex';
+  const exploreGroup = document.querySelector('.explore-create'); if (exploreGroup) exploreGroup.style.display = 'flex';
       })
       .catch(e => console.warn('Failed to load header:', e));
   </script>

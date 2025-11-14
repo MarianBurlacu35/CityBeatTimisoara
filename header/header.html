@@ -8,16 +8,48 @@
   <a class="nav-text" href="/main%20page/index.html">Home</a>
       <a class="nav-text" href="/landingPage/landingPage.html">Events</a>
   <a class="nav-text" href="/AboutUs/index.html">About Us</a>
-  <a class="nav-text" href="/contact-us/index.html">Contact Us</a>
+      <a class="nav-text" href="/contact-us/index.html">Contact Us</a>
     </nav>
+  </div>
+  
+  <!-- search group (hidden on landing page) -->
+  <div class="search-group" aria-hidden="true">
+    <div class="search-input">
+      <input type="search" placeholder="Search events" aria-label="Search events">
+      <button class="search-button" aria-label="Search">
+        <img class="icon search-btn-icon" src="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/icons/search.svg" alt="search">
+      </button>
+    </div>
+    <div class="search-input location-input">
+      <img class="icon loc-icon" src="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/icons/geo-alt.svg" alt="location">
+      <input type="text" placeholder="Iasi" aria-label="Location">
+    </div>
   </div>
 
   <div class="navbar-right">
-  <!-- open modal via hash target so it works when header is injected; disable modal unless we're on the landing page -->
-  <a href="#auth-modal" class="nav-link" onclick="(function(e){ if(!location.pathname.includes('/landingPage/')){ e.preventDefault(); } })(event)">Explore</a>
-  <a href="#auth-modal" class="nav-link" onclick="(function(e){ if(!location.pathname.includes('/landingPage/')){ e.preventDefault(); } })(event)">Create</a>
-  <button type="button" class="btn-login" onclick="location.href='/logIn/login.html'">Log in</button>
-  <button type="button" class="btn-signup" onclick="location.href='/logIn/register.html'">Sign up</button>
+  <!-- open modal via hash target so it works when header is injected; these buttons are shown only on landing page -->
+  <div class="explore-create">
+    <a href="#auth-modal" class="nav-link explore" onclick="(function(e){ if(!location.pathname.includes('/landingPage/')){ e.preventDefault(); } })(event)">Explore</a>
+    <a href="#auth-modal" class="nav-link create" onclick="(function(e){ if(!location.pathname.includes('/landingPage/')){ e.preventDefault(); } })(event)">Create</a>
+  </div>
+  <div class="nav-spacer" aria-hidden="true"></div>
+  <!-- auth buttons (shown on landing page) -->
+  <div class="auth-buttons">
+    <button type="button" class="btn-login" onclick="location.href='/logIn/login.html'">Log in</button>
+    <button type="button" class="btn-signup" onclick="location.href='/logIn/register.html'">Sign up</button>
+  </div>
+
+  <!-- user buttons (notifications + profile) shown on non-landing pages -->
+  <div class="user-buttons" aria-hidden="true">
+    <div class="user-stack">
+      <button class="btn-notif" title="Notifications">
+        <img class="icon" src="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/icons/bell.svg" alt="notifications">
+      </button>
+      <button class="btn-profile-image" title="Profile">
+        <img class="profile-img" src="https://randomuser.me/api/portraits/men/75.jpg" alt="profile">
+      </button>
+    </div>
+  </div>
   </div>
 </nav>
 
