@@ -39,6 +39,43 @@ try{
     var txt = File.ReadAllText(dataPath);
     var deserOpts = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
     events = JsonSerializer.Deserialize<List<EventItem>>(txt, deserOpts) ?? new List<EventItem>();
+
+    // Ensure every event has Contact, Email and Program populated (generate reasonable defaults)
+    foreach(var ev in events){
+        if(string.IsNullOrWhiteSpace(ev.Contact)){
+            // phone pattern: +40 7XX AAA BBB (create deterministic per id)
+            var a = (100 + (ev.Id * 7) % 900).ToString();
+            var b = (200 + (ev.Id * 13) % 800).ToString();
+            ev.Contact = $"+40 {700 + (ev.Id % 30)} {a} {b}";
+        }
+        if(string.IsNullOrWhiteSpace(ev.Email)){
+            // sanitize title to create email
+            var name = new string((ev.Title ?? "event").ToLowerInvariant().Where(c=>char.IsLetterOrDigit(c) || c==' ').ToArray()).Trim().Replace(' ','-');
+            if(string.IsNullOrWhiteSpace(name)) name = $"event-{ev.Id}";
+            ev.Email = $"{name}@citybeat.local";
+        }
+        if(ev.Program == null || ev.Program.Count == 0){
+            // generate a small program based on date/time and category
+            ev.Program = new List<ProgramSection>();
+            var s1 = new ProgramSection(){ Title = "Main", Items = new List<string>{ ev.Time + " — Opening/Intro", ev.Short.Length>60? ev.Short.Substring(0,60)+"...": ev.Short } };
+            var s2 = new ProgramSection(){ Title = "Highlights", Items = new List<string>{ "Speaker session", "Q&A" } };
+            ev.Program.Add(s1); ev.Program.Add(s2);
+        }
+    }
+
+    // Persist back to dataPath to keep the enriched data
+    try{
+        var writeOpts = new JsonSerializerOptions { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+        File.WriteAllText(dataPath, JsonSerializer.Serialize(events, writeOpts));
+        // also attempt to update repo copy if different
+        var repoPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "events", "events.json"));
+        if(repoPath != null && File.Exists(repoPath)){
+            File.WriteAllText(repoPath, JsonSerializer.Serialize(events, writeOpts));
+        }
+    }
+    catch(Exception ex){
+        Console.WriteLine("Warning: failed to persist enriched events.json: " + ex.Message);
+    }
 }
 catch(Exception ex){
     Console.WriteLine("Failed to read/parse events.json: " + ex.Message);
@@ -109,4 +146,14 @@ public class EventItem{
     public string Venue { get; set; } = string.Empty;
     public string Thumb { get; set; } = string.Empty;
     public string Short { get; set; } = string.Empty;
+    // optional contact metadata
+    public string Contact { get; set; } = string.Empty; // phone or contact string
+    public string Email { get; set; } = string.Empty;
+    // optional program sections
+    public List<ProgramSection> Program { get; set; } = new List<ProgramSection>();
+}
+
+public class ProgramSection{
+    public string Title { get; set; } = string.Empty;
+    public List<string> Items { get; set; } = new List<string>();
 }

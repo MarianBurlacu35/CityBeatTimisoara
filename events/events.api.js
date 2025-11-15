@@ -17,7 +17,25 @@
   function escapeHtml(str){ return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
   function renderItems(items){
-    listEl.innerHTML = items.map(item=>`\n      <div class="event-card">\n        <div class="event-thumb" style="background-image:url(${item.thumb})"></div>\n        <div class="event-body">\n          <h3 class="event-title">${escapeHtml(item.title)}</h3>\n          <p class="event-desc">${escapeHtml(item.short)}</p>\n          <div class="event-meta">\n            <span>${item.date} · ${item.time}</span>\n            <span>·</span>\n            <span>${escapeHtml(item.venue)}</span>\n            <span>·</span>\n            <span>${escapeHtml(item.city)}</span>\n          </div>\n        </div>\n      </div>\n    `).join('');
+    // store last rendered items for modal lookup
+    window._lastPageItems = items;
+    listEl.innerHTML = items.map(item=>{
+      const thumb = item.thumb || item.Thumb || 'https://images.unsplash.com/photo-1505685296765-3a2736de412f?w=800&q=60';
+      return `\n      <div class="event-card" data-event-id="${item.id}">\n        <div class="event-thumb" style="background-image:url('${thumb}')"></div>\n        <div class="event-body">\n          <h3 class="event-title">${escapeHtml(item.title)}</h3>\n          <p class="event-desc">${escapeHtml(item.short)}</p>\n          <div class="event-meta">\n            <span>${item.date} · ${item.time}</span>\n            <span>·</span>\n            <span>${escapeHtml(item.venue)}</span>\n            <span>·</span>\n            <span>${escapeHtml(item.city)}</span>\n          </div>\n        </div>\n      </div>\n    `;
+    }).join('');
+
+    // attach click handlers to open modal with event details
+    setTimeout(()=>{
+      const cards = listEl.querySelectorAll('.event-card');
+      cards.forEach(c=>{
+        c.style.cursor = 'pointer';
+        c.addEventListener('click', ()=>{
+          const id = Number(c.getAttribute('data-event-id'));
+          const item = (window._lastPageItems || []).find(x=>Number(x.id)===id);
+          if(item) showEventModal(item);
+        });
+      });
+    },0);
   }
 
   function renderPager(total, page){
@@ -102,6 +120,103 @@
       listEl.innerHTML = '<p style="color:#777">Could not load events.</p>';
       console.error(err);
     });
+  }
+
+  // Modal / popup UI
+  function showEventModal(item){
+    // defaults
+  const contact = item.contact || item.Contact || item.phone || '+40 123 456 789';
+  const email = item.email || item.Email || 'contact@citybeat.local';
+
+    // remove any existing modal
+    const existing = document.getElementById('cb-event-modal'); if(existing) existing.remove();
+
+    const modal = document.createElement('div'); modal.id = 'cb-event-modal'; modal.className = 'cb-modal';
+    modal.innerHTML = `
+      <div class="cb-modal-backdrop"></div>
+      <div class="cb-modal-panel">
+        <button class="cb-modal-close" aria-label="Close">×</button>
+        <div class="cb-modal-grid">
+          <div class="cb-modal-left">
+            <img src="${item.thumb}" alt="${escapeHtml(item.title)}" class="cb-event-image" />
+          </div>
+          <div class="cb-modal-right">
+            <h2 class="cb-event-title">${escapeHtml(item.title)}</h2>
+            <div class="cb-event-sub">${escapeHtml(item.date)} · ${escapeHtml(item.time)} · ${escapeHtml(item.city)} · ${escapeHtml(item.venue)}</div>
+            <p class="cb-event-desc-full">${escapeHtml(item.short)}</p>
+
+                <div class="cb-event-schedule">
+                  <h4>Program</h4>
+                  <div class="cb-schedule-columns">
+                    ${ (item.program || item.Program || []).map(s => `
+                      <div>
+                        <strong>${escapeHtml(s.title || s.Title || '')}</strong>
+                        <ul>
+                          ${(s.items || s.Items || []).map(it => `<li>${escapeHtml(it)}</li>`).join('')}
+                        </ul>
+                      </div>
+                    `).join('') }
+                  </div>
+                </div>
+
+            <div class="cb-contact-details">
+              <strong>Contact details :</strong>
+              <div>Phone : <span class="cb-contact-phone">${escapeHtml(contact)}</span></div>
+              <div>Email : <span class="cb-contact-email">${escapeHtml(email)}</span></div>
+            </div>
+
+            <div class="cb-modal-actions">
+              <button class="cb-btn cb-btn-cancel" style="background:#CF142B; display:none;">Cancel participation</button>
+              <button class="cb-btn cb-btn-share">Share</button>
+              <button class="cb-btn cb-btn-reserve" style="background:var(--purple); color:#fff;">Reserve</button>
+            </div>
+
+            <div class="cb-share-list" style="display:none">
+              <a href="#" class="cb-share-item" data-share="facebook"><svg width="18" height="18" viewBox="0 0 24 24" fill="#1877F2" xmlns="http://www.w3.org/2000/svg"><path d="M22 12.07C22 6.48 17.52 2 11.93 2S2 6.48 2 12.07c0 4.99 3.66 9.12 8.44 9.93v-7.03H8.08v-2.9h2.36V9.41c0-2.33 1.38-3.61 3.5-3.61.  1.02 0 2.09.18 2.09.18v2.3h-1.18c-1.16 0-1.52.72-1.52 1.46v1.75h2.59l-.41 2.9h-2.18v7.03C18.34 21.19 22 17.06 22 12.07z"/></svg> Facebook</a>
+              <a href="#" class="cb-share-item" data-share="instagram"><svg width="18" height="18" viewBox="0 0 24 24" fill="#E1306C" xmlns="http://www.w3.org/2000/svg"><path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm5 6a5 5 0 1 0 .001 10.001A5 5 0 0 0 12 8zm4.5-.5a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4z"/></svg> Instagram</a>
+              <a href="#" class="cb-share-item" data-share="tiktok"><svg width="18" height="18" viewBox="0 0 24 24" fill="#000" xmlns="http://www.w3.org/2000/svg"><path d="M12 2v12.5A4.5 4.5 0 1 1 9.5 12V9.5h3V2h-1.5z"/></svg> TikTok</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // handlers
+    const closeBtn = modal.querySelector('.cb-modal-close');
+    const backdrop = modal.querySelector('.cb-modal-backdrop');
+    const reserveBtn = modal.querySelector('.cb-btn-reserve');
+    const cancelBtn = modal.querySelector('.cb-btn-cancel');
+    const shareBtn = modal.querySelector('.cb-btn-share');
+    const shareList = modal.querySelector('.cb-share-list');
+
+    function closeModal(){ modal.remove(); }
+    closeBtn.addEventListener('click', closeModal);
+    backdrop.addEventListener('click', closeModal);
+
+    reserveBtn.addEventListener('click', ()=>{
+      // show cancel button when reserved
+      cancelBtn.style.display = 'inline-block';
+      reserveBtn.disabled = true;
+      reserveBtn.textContent = 'Reserved';
+    });
+
+    cancelBtn.addEventListener('click', ()=>{
+      // cancel participation
+      cancelBtn.style.display = 'none';
+      reserveBtn.disabled = false;
+      reserveBtn.textContent = 'Reserve';
+    });
+
+    shareBtn.addEventListener('click', ()=>{
+      shareList.style.display = shareList.style.display === 'none' ? 'block' : 'none';
+    });
+
+    // close on escape
+    function onKey(e){ if(e.key === 'Escape') closeModal(); }
+    document.addEventListener('keydown', onKey);
+    modal.addEventListener('remove', ()=>{ document.removeEventListener('keydown', onKey); });
   }
 
   function populateCategories(){
