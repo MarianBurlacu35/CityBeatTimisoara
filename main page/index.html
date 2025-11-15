@@ -22,40 +22,32 @@
   <!-- Hero -->
   <section class="hero">
     <div class="hero-inner">
-      <h1>Discover Your City's Pulse</h1>
-      <p>Explore events, connect with locals, and experience the best our city has to offer.</p>
-      <a class="cta" href="#">Explore Events</a>
+  <h1>Discover Your City's Pulse</h1>
+  <p>Explore events, connect with locals, and experience the best our city has to offer.</p>
+  <a class="cta" href="/events/index.html">Explore Events</a>
     </div>
   </section>
 
   <main class="content">
     <section class="featured">
-      <h2>Featured Events</h2>
-      <div class="cards">
-          <article class="card"><img src="https://images.unsplash.com/photo-1506152983158-2a75649752d1?w=1200&q=60" alt="Beach festival"><h3>Beach Please Festival</h3><p>Experience the energy of live music.</p></article>
-          <article class="card"><img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&q=60" alt="Food fest"><h3>Taste of the City Food Fest</h3><p>Indulge in a culinary journey.</p></article>
-          <article class="card"><img src="https://images.unsplash.com/photo-1524678606370-a47ad25cb82a?w=1200&q=60" alt="Art showcase"><h3>Art & Culture Showcase</h3><p>Immerse your self in creativity.</p></article>
-        </div>
+      <h2>Featured Events (Today)</h2>
+      <div id="main-featured" class="cards">
+        <!-- featured events for today will be populated here (via JS) -->
+      </div>
     </section>
 
     <section class="categories">
       <h2>Categories</h2>
       <div class="cats">
-        <div class="cat">Music</div>
-        <div class="cat">Art & Culture</div>
-        <div class="cat">Food & Drink</div>
-        <div class="cat">Sports</div>
-        <div class="cat">Community</div>
-        <div class="cat">Others</div>
+        <!-- Clickable tiles (horizontal scroll) -->
+        <div id="main-cats-tiles" class="cat-tiles" aria-label="Categories"></div>
       </div>
     </section>
 
     <section class="upcoming">
       <h2>Upcoming Events</h2>
-      <div class="cards small">
-    <article class="card"><img src="https://images.unsplash.com/photo-1504198453319-5ce911bafcde?w=1200&q=60" alt="Photography"><h3>Photography Workshop</h3><p>Learn from professionals.</p></article>
-    <article class="card"><img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1200&q=60" alt="Live music"><h3>Local Band Night</h3><p>Discover new local talent.</p></article>
-    <article class="card"><img src="https://images.unsplash.com/photo-1520975914395-ea2fa9f8d0b6?w=1200&q=60" alt="Sports"><h3>Basketball Tournament</h3><p>Watch exciting games.</p></article>
+      <div class="cards small" id="main-upcoming">
+        <!-- upcoming events (populated by script) -->
       </div>
     </section>
   </main>
@@ -73,7 +65,7 @@
   const userBtns = document.querySelector('.user-buttons'); if (userBtns) userBtns.style.display = 'flex';
   const auth = document.querySelector('.auth-buttons'); if (auth) auth.style.display = 'none';
   const exploreGroup = document.querySelector('.explore-create'); if (exploreGroup) exploreGroup.style.display = 'none';
-        // after injecting header, append 4 text buttons next to the logo
+  // after injecting header, append 4 text buttons next to the logo
         const left = document.querySelector('.navbar-left');
         if(left){
           // only add nav if header fragment didn't already include it
@@ -87,7 +79,7 @@
             btn.textContent = label;
             // wire navigation for each label
             if(label === 'Home') btn.addEventListener('click', () => location.href = '/');
-            else if(label === 'Events') btn.addEventListener('click', () => location.href = '/landingPage/landingPage.html');
+            else if(label === 'Events') btn.addEventListener('click', () => location.href = '/events/index.html');
             else if(label === 'About Us') btn.addEventListener('click', () => location.href = '/AboutUs/index.html');
             else if(label === 'Contact Us') btn.addEventListener('click', () => location.href = '/contact-us/index.html');
             nav.appendChild(btn);
@@ -95,13 +87,203 @@
             left.appendChild(nav);
           }
         }
-      })
-      .catch(e => console.warn('Header load failed', e));
+        })
+        .catch(e => console.warn('Header load failed', e));
+
+        // after header injected we rely on centralized header notification handling; ensure profile dropdown exists
+        (function(){
+          if(!document.querySelector('.profile-dropdown')){
+            const wrap = document.createElement('div'); wrap.className = 'profile-dropdown';
+            wrap.innerHTML = `
+              <div class="pd-inner">
+                <div class="pd-header"><img src="https://randomuser.me/api/portraits/men/75.jpg"><div><div class="pd-name">Milo James</div><div style="font-size:12px;color:#666">milo.james@example.com</div></div></div>
+                <div class="pd-sep"></div>
+                <ul class="pd-list">
+                  <li data-action="profile"><span class="pd-icon">👤</span><span>Profile</span><span>➡</span></li>
+                  <li data-action="dashboard"><span class="pd-icon">≡</span><span>Dashboard</span><span>➡</span></li>
+                  <li data-action="settings"><span class="pd-icon">⚙️</span><span>Settings</span><span>➡</span></li>
+                  <li data-action="feedback"><span class="pd-icon">✉️</span><span>Give us feedback</span><span>➡</span></li>
+                  <li data-action="logout"><span class="pd-icon">📖</span><span>Logout</span><span>➡</span></li>
+                </ul>
+              </div>
+            `;
+            document.body.appendChild(wrap);
+          }
+        })();
 
     fetch('/footer/footer.html')
       .then(r => r.text())
       .then(html => document.getElementById('site-footer').innerHTML = html)
       .catch(e => console.warn('Footer load failed', e));
+
+  // Populate categories on main page as horizontal tiles and show upcoming events (next 7 days)
+  (function(){
+    const tiles = document.getElementById('main-cats-tiles');
+    const upcomingEl = document.getElementById('main-upcoming');
+    if(!tiles) return;
+
+    async function fetchCategories(){
+      window.citybeatApiBase = window.citybeatApiBase || '';
+      const API_BASE_CANDIDATES = ['', 'http://localhost:5000', 'http://127.0.0.1:5000'];
+      for(const base of API_BASE_CANDIDATES){
+        try{
+          const url = (base || '') + '/api/events/categories';
+          const r = await fetch(url);
+          if(r.ok){
+            const cats = await r.json();
+            if(Array.isArray(cats) && cats.length) return cats;
+          }
+        }catch(e){ /* try next */ }
+      }
+      // if we reached here and one of the remote hosts responded earlier, ensure global base is filled
+      for(const base of API_BASE_CANDIDATES){
+        try{
+          const url = (base || '') + '/api/events/categories';
+          const r = await fetch(url);
+          if(r.ok){ window.citybeatApiBase = base || ''; break; }
+        }catch(e){}
+      }
+      // fallback: static file
+      try{
+        const r2 = await fetch('/events/events.json');
+        if(r2.ok){
+          const all = await r2.json();
+          return Array.from(new Set(all.map(e=>e.category))).sort();
+        }
+      }catch(e){ }
+      return [];
+    }
+
+    function renderTiles(cats){
+      tiles.innerHTML = cats.map(c=>`<button class="cat" data-cat="${c}"><div class="cat-thumb" aria-hidden></div><div class="cat-label">${c}</div></button>`).join('');
+      tiles.querySelectorAll('.cat').forEach(b=> b.addEventListener('click', ()=>{
+        const v = b.getAttribute('data-cat');
+        const q = v ? '?category=' + encodeURIComponent(v) : '';
+        location.href = '/events/index.html' + q;
+      }));
+      // apply per-category thumbnails
+      const categoryImages = {
+        "Music": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&q=60",
+        "Tech": "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=60",
+        "Film": "https://images.unsplash.com/photo-1505685296765-3a2736de412f?w=800&q=60",
+        "Market": "https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=800&q=60",
+        "Workshop": "https://images.unsplash.com/photo-1511763368359-889c1b3f2f5a?w=800&q=60",
+        "Health": "https://images.unsplash.com/photo-1526403224749-1e20f4e4c6d1?w=800&q=60",
+        "Education": "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&q=60",
+        "Theatre": "https://images.unsplash.com/photo-1558980394-0c0b8adf3d8b?w=800&q=60",
+        "Literature": "https://images.unsplash.com/photo-1509099836639-18ba5bd8ae24?w=800&q=60",
+        "Family": "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=800&q=60",
+        "Food": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=60",
+        "Sport": "https://images.unsplash.com/photo-1509228627159-645f5e93b9c9?w=800&q=60",
+        "Art": "https://images.unsplash.com/photo-1524678606370-a47ad25cb82a?w=800&q=60",
+        "Business": "https://images.unsplash.com/photo-1521791136064-7986c2920216?w=800&q=60",
+        "Games": "https://images.unsplash.com/photo-1528747029046-1622b72b3858?w=800&q=60",
+        "Dance": "https://images.unsplash.com/photo-1519669556872-6fae8f1f0e9c?w=800&q=60",
+        "Craft": "https://images.unsplash.com/photo-1520975914395-ea2fa9f8d0b6?w=800&q=60",
+        "Science": "https://images.unsplash.com/photo-1508610048659-a06f3b2d7f92?w=800&q=60",
+        "Comedy": "https://images.unsplash.com/photo-1513185158878-9ad7f83c7160?w=800&q=60",
+        "Charity": "https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d?w=800&q=60",
+        // default
+        "_default": "https://images.unsplash.com/photo-1505685296765-3a2736de412f?w=800&q=60"
+      };
+      tiles.querySelectorAll('.cat').forEach(b=>{
+        const cat = b.getAttribute('data-cat');
+        const thumb = b.querySelector('.cat-thumb');
+        const url = categoryImages[cat] || categoryImages._default;
+        if(thumb) thumb.style.backgroundImage = `url(${url})`;
+      });
+    }
+
+    // Featured (today) loading — similar approach to upcoming, but dateFilter=today
+    async function loadFeatured(){
+      const container = document.getElementById('main-featured');
+      if(!container) return;
+      const API_BASE_CANDIDATES = ['', 'http://localhost:5000', 'http://127.0.0.1:5000'];
+      for(const base of API_BASE_CANDIDATES){
+        try{
+          const url = (base || '') + '/api/events?page=1&pageSize=1000&dateFilter=today&sort=date-asc';
+          const r = await fetch(url);
+          if(!r.ok) throw new Error('no api');
+          const js = await r.json();
+          const items = js.items || [];
+          if(items.length){
+            window.citybeatApiBase = base || window.citybeatApiBase || '';
+            container.innerHTML = items.slice(0,3).map(it=>`<article class="card" data-event-id="${it.id}"><img src="${it.thumb || 'https://images.unsplash.com/photo-1505685296765-3a2736de412f?w=1200&q=60'}" alt="${it.title}"><h3>${it.title}</h3><p>${it.short}</p></article>`).join('');
+            container.querySelectorAll('.card').forEach(c=> c.addEventListener('click', ()=>{
+              const id = c.getAttribute('data-event-id');
+              location.href = '/events/index.html?eventId=' + encodeURIComponent(id);
+            }));
+            return;
+          }
+        }catch(e){/* try next */}
+      }
+      // fallback static
+      try{
+        const r2 = await fetch('/events/events.json');
+        if(!r2.ok) throw new Error('no static');
+        const all = await r2.json();
+        const todayStr = new Date().toISOString().slice(0,10);
+        const todayItems = all.filter(e=> e.date === todayStr).slice(0,3);
+        if(todayItems.length){
+          container.innerHTML = todayItems.map(it=>`<article class="card" data-event-id="${it.id}"><img src="${it.thumb || 'https://images.unsplash.com/photo-1505685296765-3a2736de412f?w=1200&q=60'}" alt="${it.title}"><h3>${it.title}</h3><p>${it.short}</p></article>`).join('');
+          container.querySelectorAll('.card').forEach(c=> c.addEventListener('click', ()=>{
+            const id = c.getAttribute('data-event-id');
+            location.href = '/events/index.html?eventId=' + encodeURIComponent(id);
+          }));
+        }
+      }catch(e){/* give up */}
+    }
+
+    async function loadUpcoming(){
+      if(!upcomingEl) return;
+      const API_BASE_CANDIDATES = ['', 'http://localhost:5000', 'http://127.0.0.1:5000'];
+      // try API candidates first
+      for(const base of API_BASE_CANDIDATES){
+        try{
+          const url = (base || '') + '/api/events?page=1&pageSize=1000&dateFilter=7days&sort=date-asc';
+          const r = await fetch(url);
+          if(!r.ok) throw new Error('no api');
+          const js = await r.json();
+          const items = js.items || [];
+          const now = new Date();
+          const next = items.filter(e=> new Date(e.date) >= now).sort((a,b)=> new Date(a.date) - new Date(b.date)).slice(0,3);
+          if(next.length){
+            window.citybeatApiBase = base || window.citybeatApiBase || '';
+            upcomingEl.innerHTML = next.map(it=>`<article class="card upcoming-card" data-event-id="${it.id}"><img src="${it.thumb || 'https://images.unsplash.com/photo-1505685296765-3a2736de412f?w=1200&q=60'}" alt="${it.title}"><h3>${it.title}</h3><p>${it.short}</p></article>`).join('');
+            upcomingEl.querySelectorAll('.upcoming-card').forEach(c=> c.addEventListener('click', ()=>{
+              const id = c.getAttribute('data-event-id');
+              location.href = '/events/index.html?eventId=' + encodeURIComponent(id);
+            }));
+            return; // done
+          }
+        }catch(e){ /* try next base */ }
+      }
+
+      // fallback to static events.json file and filter client-side
+      try{
+        const r2 = await fetch('/events/events.json');
+        if(!r2.ok) throw new Error('no static');
+        const all = await r2.json();
+        const now = new Date();
+        const next = all.filter(e=>{
+          const d = new Date(e.date);
+          const diff = (d - now)/(1000*60*60*24);
+          return diff >= 0 && diff <= 7;
+        }).sort((a,b)=> new Date(a.date) - new Date(b.date)).slice(0,3);
+        if(next.length){
+          upcomingEl.innerHTML = next.map(it=>`<article class="card upcoming-card" data-event-id="${it.id}"><img src="${it.thumb || 'https://images.unsplash.com/photo-1505685296765-3a2736de412f?w=1200&q=60'}" alt="${it.title}"><h3>${it.title}</h3><p>${it.short}</p></article>`).join('');
+          upcomingEl.querySelectorAll('.upcoming-card').forEach(c=> c.addEventListener('click', ()=>{
+            const id = c.getAttribute('data-event-id');
+            location.href = '/events/index.html?eventId=' + encodeURIComponent(id);
+          }));
+        }
+      }catch(e){ /* give up */ }
+    }
+
+    fetchCategories().then(cats => renderTiles(cats)).catch(()=>{});
+    loadUpcoming();
+    loadFeatured();
+  })();
   </script>
 </body>
 </html>

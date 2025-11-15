@@ -34,6 +34,277 @@
   </div>
   <div class="nav-spacer" aria-hidden="true"></div>
   <!-- auth buttons (shown on landing page) -->
+
+    <script>
+      (function(){
+        // Ensure a notification panel exists and expose a global refreshNotifications function
+        function ensureNotifPanel(){
+          if(!document.querySelector('.notif-panel')){
+            const div = document.createElement('div');
+            div.className = 'notif-panel';
+            div.innerHTML = '<div class="np-inner"><div style="padding:12px 14px;border-bottom:1px solid #f2f2f2"><strong>Notifications</strong></div><div class="np-list" style="padding:6px"></div></div>';
+            document.body.appendChild(div);
+          }
+        }
+
+        window.refreshNotifications = async function(){
+          try{
+            ensureNotifPanel();
+            const user = localStorage.getItem('user') || 'demo';
+            const API_BASE_CANDIDATES = [ window.citybeatApiBase || '', 'http://localhost:5000', 'http://127.0.0.1:5000' ];
+            let base = window.citybeatApiBase || '';
+            let list = null;
+            for(const b of API_BASE_CANDIDATES){
+              try{
+                const r = await fetch((b || '') + '/api/user/' + encodeURIComponent(user) + '/notifications');
+                if(r.ok){ list = await r.json(); base = b || base || ''; break; }
+              }catch(e){}
+            }
+            window.citybeatApiBase = base || window.citybeatApiBase || '';
+            if(!list) return;
+            const npList = document.querySelector('.notif-panel .np-list'); if(!npList) return;
+            npList.innerHTML = '';
+            let unread = 0;
+            (list || []).forEach(n=>{
+              const d = document.createElement('div'); d.className = 'notif-item'; d.style.cursor = 'pointer';
+              const left = document.createElement('div'); left.style.flex='1'; left.innerHTML = `<div style="font-weight:600">${(n.message||'')}</div><div class='ni-time'>${new Date(n.timestamp).toLocaleString()}</div>`;
+              d.appendChild(left);
+              d.addEventListener('click', async ()=>{
+                try{ await fetch((base || '') + '/api/user/' + encodeURIComponent(user) + '/notifications/markread', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ id: n.id }) }); }catch(e){}
+                if(n.eventId) location.href = '/events/index.html?eventId=' + encodeURIComponent(n.eventId);
+              });
+              npList.appendChild(d);
+              if(!n.read) unread++;
+            });
+            const existingBadge = document.querySelector('.btn-notif .notif-badge'); if(existingBadge) existingBadge.remove();
+            const notifBtn = document.querySelector('.btn-notif');
+            if(unread > 0 && notifBtn){ const b = document.createElement('span'); b.className='notif-badge'; b.textContent = String(unread); notifBtn.style.position='relative'; notifBtn.appendChild(b); }
+          }catch(e){ console.warn('refreshNotifications error', e); }
+        };
+
+        // wire search inputs in header to provide suggestions and redirect to events page
+        function wireSearch(){
+          const searchGroup = document.querySelector('.search-group'); if(!searchGroup) return;
+          const textInput = searchGroup.querySelector('.search-input input[type="search"]');
+          const searchBtn = searchGroup.querySelector('.search-button');
+          const locInput = searchGroup.querySelector('.location-input input[type="text"]');
+
+          // create suggestion dropdown container
+          let sugBox = searchGroup.querySelector('.search-suggestions');
+          if(!sugBox){
+            sugBox = document.createElement('div');
+            // CSS class places the dropdown below the input and aligns it to the left edge
+            sugBox.className = 'search-suggestions';
+            const wrapper = searchGroup.querySelector('.search-input');
+            // ensure wrapper is positioned for absolute children (CSS already sets this, but keep safe)
+            wrapper.style.position = wrapper.style.position || 'relative';
+            wrapper.appendChild(sugBox);
+          }
+
+          // debounce helper
+          let debounceTimer = null;
+          function debounce(fn, ms){ return function(...args){ clearTimeout(debounceTimer); debounceTimer = setTimeout(()=>fn.apply(this,args), ms); }; }
+
+          async function fetchSuggestions(q){
+            if(!q || q.length < 1){ sugBox.style.display='none'; sugBox.dataset.hasResults = 'false'; return; }
+            const user = localStorage.getItem('user') || 'demo';
+            const API_BASE_CANDIDATES = [ window.citybeatApiBase || '', 'http://localhost:5000', 'http://127.0.0.1:5000' ];
+            let list = null; let base = window.citybeatApiBase || '';
+            for(const b of API_BASE_CANDIDATES){
+              try{
+                // query the cities endpoint for suggestions (returns { items: [{ name, count }] })
+                const url = (b || '') + '/api/events/cities?page=1&pageSize=6&q=' + encodeURIComponent(q);
+                const r = await fetch(url);
+                if(r.ok){ list = await r.json(); base = b || base || ''; break; }
+              }catch(e){}
+            }
+            window.citybeatApiBase = base || window.citybeatApiBase || '';
+            if(!list || !list.items) { sugBox.style.display='none'; return; }
+            const items = list.items || [];
+            if(items.length === 0){
+              sugBox.innerHTML = '<div class="no-match">No matches found</div>';
+              sugBox.style.display = 'block';
+              sugBox.dataset.hasResults = 'false';
+              return;
+            }
+            sugBox.innerHTML = '';
+            sugBox.dataset.hasResults = 'true';
+            items.forEach(it => {
+              const row = document.createElement('div');
+              row.className = 'sug-item';
+              row.style.cursor = 'pointer';
+              row.style.display = 'flex';
+              row.style.alignItems = 'center';
+              // it has 'name' and 'count'
+              row.innerHTML = `<div style="flex:1"><div class="sug-title">${(it.name||'')}</div><div class="sug-meta">${(it.count||0)} events</div></div>`;
+              row.addEventListener('click', ()=>{
+                // navigate to events page filtered by city (loc param)
+                const params = new URLSearchParams(); if(it.name) params.set('loc', it.name); if(locInput && locInput.value) params.set('loc', it.name);
+                location.href = '/events/index.html?' + params.toString();
+              });
+              row.addEventListener('mouseover', ()=> row.style.background = '#f6f6f8');
+              row.addEventListener('mouseout', ()=> row.style.background = 'transparent');
+              sugBox.appendChild(row);
+            });
+            sugBox.style.display = 'block';
+          }
+
+          const debFetch = debounce((v)=> fetchSuggestions(v), 250);
+
+          if(textInput){
+            textInput.addEventListener('input', (ev)=>{ debFetch(ev.target.value.trim()); });
+            textInput.addEventListener('keydown', (ev)=>{
+              if(ev.key === 'Enter'){
+                ev.preventDefault();
+                const qv = (textInput.value||'').trim();
+                // if input empty, do nothing
+                if(!qv) return;
+                // if suggestions are visible but show "no matches", do nothing
+                if(sugBox && sugBox.style.display === 'block' && sugBox.dataset.hasResults === 'false') return;
+                performSearch();
+              }
+              if(ev.key === 'Escape'){ sugBox.style.display='none'; }
+            });
+            document.addEventListener('click', (ev)=>{ if(!searchGroup.contains(ev.target)) sugBox.style.display='none'; });
+          }
+
+          function performSearch(){
+            const q = (textInput && textInput.value || '').trim();
+            const loc = (locInput && locInput.value || '').trim();
+            const params = new URLSearchParams(); if(q) params.set('q', q); if(loc) params.set('loc', loc);
+            const qs = params.toString();
+            location.href = '/events/index.html' + (qs ? ('?' + qs) : '');
+          }
+
+          if(searchBtn) searchBtn.addEventListener('click', ()=>{ if(sugBox && sugBox.style.display==='block'){ performSearch(); } else if(textInput){ fetchSuggestions((textInput.value||'').trim()); } });
+          if(locInput) locInput.addEventListener('keydown', (ev)=>{ if(ev.key === 'Enter') performSearch(); });
+        }
+        setTimeout(wireSearch, 120);
+      })();
+    </script>
+    <script>
+      // robust profile menu wiring using event delegation so it works even when header is injected
+      (function(){
+        let pm = null;
+        function ensureMenu(){
+          if(pm) return pm;
+          pm = document.querySelector('.profile-menu');
+          if(!pm){
+            pm = document.createElement('div'); pm.className = 'profile-menu';
+            const userName = localStorage.getItem('userName') || 'Milo James';
+            const userEmail = localStorage.getItem('userEmail') || 'milo.james@example.com';
+            pm.innerHTML = `<div class="pm-header"><img src="https://randomuser.me/api/portraits/men/75.jpg"><div><div class="pm-name">${userName}</div><div class="pm-email">${userEmail}</div></div></div><ul class="pm-list"><li data-action="profile">Profile</li><li data-action="settings">Settings</li></ul>`;
+            document.body.appendChild(pm);
+          }
+          return pm;
+        }
+
+        function showMenuFor(button){
+          const menu = ensureMenu();
+          // toggle
+          if(menu.style.display === 'block') { menu.style.display = 'none'; return; }
+          menu.style.display = 'block';
+          menu.style.visibility = 'hidden';
+          menu.style.left = '0px'; menu.style.top = '0px';
+          requestAnimationFrame(()=>{
+            const rect = button.getBoundingClientRect();
+            const menuW = menu.offsetWidth;
+            const left = Math.max(8, rect.right - menuW);
+            menu.style.left = (left + window.scrollX) + 'px';
+            menu.style.top = (rect.bottom + 8 + window.scrollY) + 'px';
+            menu.style.visibility = 'visible';
+          });
+        }
+
+        function hideMenu(){ if(pm) pm.style.display = 'none'; }
+
+        document.addEventListener('click', function(e){
+          const btn = e.target.closest('.btn-profile-image');
+          const clickedMenuItem = e.target.closest('.profile-menu li[data-action]');
+          if(btn){ e.stopPropagation(); showMenuFor(btn); return; }
+          if(clickedMenuItem){
+            const act = clickedMenuItem.getAttribute('data-action');
+            if(act === 'profile'){
+              fetch('/profile/index.html', { method: 'HEAD' }).then(r=>{ if(r.ok) location.href = '/profile/index.html'; else console.warn('Profile page not found'); }).catch(()=> console.warn('Profile page not found'));
+            } else if(act === 'settings'){
+              alert('Settings coming soon');
+            }
+            return;
+          }
+          // click elsewhere
+          if(!e.target.closest('.profile-menu')) hideMenu();
+        });
+
+        document.addEventListener('keydown', function(e){ if(e.key === 'Escape') hideMenu(); });
+      })();
+    </script>
+    <script>
+      // Extra wiring to ensure notif and profile buttons toggle their panels reliably
+      (function(){
+        function ensureNotifPanelGlobal(){
+          let p = document.querySelector('.notif-panel');
+          if(!p){
+            p = document.createElement('div'); p.className = 'notif-panel';
+            p.innerHTML = '<div class="np-inner"><div style="padding:12px 14px;border-bottom:1px solid #f2f2f2"><strong>Notifications</strong></div><div class="np-list" style="padding:6px"></div></div>';
+            p.style.position = 'absolute'; p.style.display = 'none'; p.style.zIndex = 2000; p.style.width = '360px';
+            document.body.appendChild(p);
+          }
+          return p;
+        }
+
+        function ensureProfileMenuGlobal(){
+          let m = document.querySelector('.profile-menu');
+          if(!m){
+            m = document.createElement('div'); m.className = 'profile-menu';
+            const userName = localStorage.getItem('userName') || 'Milo James';
+            const userEmail = localStorage.getItem('userEmail') || 'milo.james@example.com';
+            m.innerHTML = `<div class="pm-header"><img src="https://randomuser.me/api/portraits/men/75.jpg"><div><div class="pm-name">${userName}</div><div class="pm-email">${userEmail}</div></div></div><ul class="pm-list"><li data-action="profile">Profile</li><li data-action="settings">Settings</li></ul>`;
+            m.style.position = 'absolute'; m.style.display = 'none'; m.style.zIndex = 2000; m.style.width = '260px';
+            document.body.appendChild(m);
+          }
+          return m;
+        }
+
+        function positionPanelUnder(panel, btn){
+          const rect = btn.getBoundingClientRect();
+          panel.style.visibility = 'hidden';
+          panel.style.display = 'block';
+          requestAnimationFrame(()=>{
+            const menuW = panel.offsetWidth;
+            const left = Math.max(8, rect.right - menuW);
+            panel.style.left = (left + window.scrollX) + 'px';
+            panel.style.top = (rect.bottom + 8 + window.scrollY) + 'px';
+            panel.style.visibility = 'visible';
+          });
+        }
+
+        // wire buttons once header exists
+        setTimeout(()=>{
+          const notifBtn = document.querySelector('.btn-notif');
+          const profileBtn = document.querySelector('.btn-profile-image');
+          if(notifBtn){
+            notifBtn.addEventListener('click', (e)=>{
+              e.stopPropagation();
+              const panel = ensureNotifPanelGlobal();
+              // refresh contents
+              if(window.refreshNotifications) window.refreshNotifications();
+              if(panel.style.display === 'block') { panel.style.display = 'none'; return; }
+              positionPanelUnder(panel, notifBtn);
+            });
+          }
+          if(profileBtn){
+            profileBtn.addEventListener('click', (e)=>{
+              e.stopPropagation();
+              const pm = ensureProfileMenuGlobal();
+              if(pm.style.display === 'block'){ pm.style.display = 'none'; return; }
+              positionPanelUnder(pm, profileBtn);
+            });
+          }
+          // hide panels when clicking elsewhere
+          document.addEventListener('click', ()=>{ const p = document.querySelector('.notif-panel'); if(p) p.style.display = 'none'; const m = document.querySelector('.profile-menu'); if(m) m.style.display = 'none'; });
+        }, 200);
+      })();
+    </script>
   <div class="auth-buttons">
     <button type="button" class="btn-login" onclick="location.href='/logIn/login.html'">Log in</button>
     <button type="button" class="btn-signup" onclick="location.href='/logIn/register.html'">Sign up</button>

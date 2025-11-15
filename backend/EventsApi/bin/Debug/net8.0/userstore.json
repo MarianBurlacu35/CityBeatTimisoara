@@ -1,0 +1,156 @@
+{
+  "users": {
+    "demo": {
+      "favorites": [
+        31,
+        6,
+        1,
+        22
+      ],
+      "saved": [
+        6,
+        1,
+        31
+      ],
+      "reserved": [
+        31,
+        1
+      ],
+      "notifications": [
+        {
+          "id": "3af98020-8f18-47e9-94d0-d64a681a4c81",
+          "timestamp": "2025-11-15T10:13:57.3516085Z",
+          "message": "Added to favorites: event 2",
+          "eventId": 2,
+          "read": true
+        },
+        {
+          "id": "c460bd59-89f7-4394-af87-ef519e9f6195",
+          "timestamp": "2025-11-15T10:25:26.6349316Z",
+          "message": "Added to favorites: event 1",
+          "eventId": 1,
+          "read": false
+        },
+        {
+          "id": "c51be0a5-0d88-4ae2-aee3-13878adefb28",
+          "timestamp": "2025-11-15T10:25:37.4648089Z",
+          "message": "Saved event: event 1",
+          "eventId": 1,
+          "read": false
+        },
+        {
+          "id": "b7e5b91c-60cf-449a-94c8-5971540bac50",
+          "timestamp": "2025-11-15T10:25:42.0939221Z",
+          "message": "Removed from saved: event 1",
+          "eventId": 1,
+          "read": false
+        },
+        {
+          "id": "3a62911d-3c22-4db1-ab2c-66503957c598",
+          "timestamp": "2025-11-15T10:25:43.5014271Z",
+          "message": "Saved event: event 1",
+          "eventId": 1,
+          "read": false
+        },
+        {
+          "id": "7f7ce672-fac3-4f7e-9325-40ca97996c82",
+          "timestamp": "2025-11-15T10:25:43.8275319Z",
+          "message": "Removed from saved: event 1",
+          "eventId": 1,
+          "read": true
+        },
+        {
+          "id": "2fe6fee6-e562-42c9-a099-82cbbfd80784",
+          "timestamp": "2025-11-15T10:27:27.6688384Z",
+          "message": "Saved event: event 1",
+          "eventId": 1,
+          "read": false
+        },
+        {
+          "id": "444ae57e-a8bd-46d6-943c-a4e5ee94252b",
+          "timestamp": "2025-11-15T10:27:31.0177105Z",
+          "message": "Saved event: event 6",
+          "eventId": 6,
+          "read": false
+        },
+        {
+          "id": "41f41e8e-0d56-4fb7-b6ea-5ed89e42563c",
+          "timestamp": "2025-11-15T10:27:35.159661Z",
+          "message": "Added to favorites: event 31",
+          "eventId": 31,
+          "read": false
+        },
+        {
+          "id": "e643d616-8d6e-4759-8067-6fea1bb23630",
+          "timestamp": "2025-11-15T10:27:38.5052253Z",
+          "message": "Reserved a ticket for event 31",
+          "eventId": 31,
+          "read": false
+        },
+        {
+          "id": "ee871d20-d1f0-4bec-b794-96b4facb353c",
+          "timestamp": "2025-11-15T10:55:55.7314288Z",
+          "message": "Removed from saved: Summer Jazz Night",
+          "eventId": 1,
+          "read": false
+        },
+        {
+          "id": "09cad5fa-f5f1-48da-805b-673b9b54a1e5",
+          "timestamp": "2025-11-15T10:55:56.9021498Z",
+          "message": "Reserved a ticket for Summer Jazz Night",
+          "eventId": 1,
+          "read": false
+        },
+        {
+          "id": "75ee3167-f238-4fc4-a968-27448240cff3",
+          "timestamp": "2025-11-15T10:56:17.6533981Z",
+          "message": "Saved event: Summer Jazz Night",
+          "eventId": 1,
+          "read": false
+        },
+        {
+          "id": "cb1f2699-3c97-47dd-a49b-22d06f0175c0",
+          "timestamp": "2025-11-15T10:56:19.5015785Z",
+          "message": "Added to favorites: Community Yoga Morning",
+          "eventId": 6,
+          "read": false
+        },
+        {
+          "id": "6e3cdb3e-a2c5-4f6f-9598-96b82b803ba6",
+          "timestamp": "2025-11-15T11:21:58.9176824Z",
+          "message": "Removed from favorites: Summer Jazz Night",
+          "eventId": 1,
+          "read": false
+        },
+        {
+          "id": "91138e1a-1f6b-45fe-8760-2e6d70b1e29b",
+          "timestamp": "2025-11-15T11:22:00.7876731Z",
+          "message": "Added to favorites: Summer Jazz Night",
+          "eventId": 1,
+          "read": false
+        },
+        {
+          "id": "d3824fc7-7407-4eab-baa0-b051b8a0552d",
+          "timestamp": "2025-11-15T11:46:03.3338947Z",
+          "message": "Removed from favorites: UniHack Timisoara",
+          "eventId": 2,
+          "read": false
+        },
+        {
+          "id": "f115c11f-75ad-4697-bfb0-8f763caba31d",
+          "timestamp": "2025-11-15T13:55:29.5869251Z",
+          "message": "Saved event: Indie Film Screening",
+          "eventId": 31,
+          "read": false
+        },
+        {
+          "id": "4f6a4a36-edc4-4d96-8b30-a06928182bac",
+          "timestamp": "2025-11-15T13:59:37.7173097Z",
+          "message": "Added to favorites: Blacksmithing Demo",
+          "eventId": 22,
+          "read": true
+        }
+      ]
+    }
+  }
+}

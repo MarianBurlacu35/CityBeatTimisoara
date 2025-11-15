@@ -16,6 +16,17 @@ body{ font-family: Inter, system-ui, Arial, sans-serif; margin:0; background:#fa
 .event-title{ font-weight:700; font-size:18px; margin:0 0 6px }
 .event-desc{ margin:0;color:#555 }
 .event-meta{ display:flex; gap:12px; align-items:center; color:#666; font-size:13px; margin-top:8px }
+.event-actions{ margin-top:10px; display:flex; gap:8px }
+.event-actions .evt-fav, .event-actions .evt-save{ border:none; background:transparent; cursor:pointer; font-size:18px; padding:6px }
+.event-actions .evt-fav img, .event-actions .evt-save img{ width:20px; height:20px; display:block }
+.event-actions .evt-fav.is-active img{ transform: scale(1.02); }
+.event-actions .evt-save.is-active img{ transform: scale(1.02); }
+.cb-btn-fav, .cb-btn-save{ padding:8px 12px; border-radius:8px; border:none; cursor:pointer; background:#fff }
+.cb-btn-fav img, .cb-btn-save img{ width:18px; height:18px; vertical-align:middle }
+.cb-btn-fav.is-active img{ transform: scale(1.02); }
+.cb-btn-save.is-active img{ transform: scale(1.02); }
+/* smooth icon transitions */
+.event-actions .evt-fav img, .event-actions .evt-save img, .cb-btn-fav img, .cb-btn-save img{ transition: transform .14s ease, opacity .12s ease; }
 
 .pager{ display:flex; gap:8px; justify-content:center; margin-top:20px }
 .pager button{ padding:8px 12px; border-radius:8px; border:none; background:#fff; box-shadow:0 2px 6px rgba(0,0,0,0.06); cursor:pointer }

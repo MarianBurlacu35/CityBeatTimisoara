@@ -12,7 +12,19 @@
   let useApi = true;
   // chosen API base (empty string means same-origin). We'll detect which base works in populateCategories.
   let chosenApiBase = '';
+  // expose for other scripts (notifications in header) so they can use the same API host
+  window.citybeatApiBase = window.citybeatApiBase || '';
   const API_BASE_CANDIDATES = ['', 'http://localhost:5000', 'http://127.0.0.1:5000'];
+  // If user navigated with a category in the URL (e.g. /events/index.html?category=Music), apply it
+  const initialCategory = new URLSearchParams(location.search).get('category') || '';
+  // If user navigated with an eventId (e.g. /events/index.html?eventId=12) open its modal after loading
+  const initialEventId = Number(new URLSearchParams(location.search).get('eventId') || 0) || 0;
+  // optional strict search query (header search) and location param
+  const initialQuery = new URLSearchParams(location.search).get('q') || '';
+  const initialLoc = new URLSearchParams(location.search).get('loc') || '';
+  let pendingOpenEventId = 0;
+  let initialEventHandled = false;
+  let userActions = { favorites: [], saved: [], reserved: [] };
 
   function escapeHtml(str){ return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
@@ -20,8 +32,10 @@
     // store last rendered items for modal lookup
     window._lastPageItems = items;
     listEl.innerHTML = items.map(item=>{
-      const thumb = item.thumb || item.Thumb || 'https://images.unsplash.com/photo-1505685296765-3a2736de412f?w=800&q=60';
-      return `\n      <div class="event-card" data-event-id="${item.id}">\n        <div class="event-thumb" style="background-image:url('${thumb}')"></div>\n        <div class="event-body">\n          <h3 class="event-title">${escapeHtml(item.title)}</h3>\n          <p class="event-desc">${escapeHtml(item.short)}</p>\n          <div class="event-meta">\n            <span>${item.date} · ${item.time}</span>\n            <span>·</span>\n            <span>${escapeHtml(item.venue)}</span>\n            <span>·</span>\n            <span>${escapeHtml(item.city)}</span>\n          </div>\n        </div>\n      </div>\n    `;
+  const thumb = item.thumb || item.Thumb || 'https://images.unsplash.com/photo-1505685296765-3a2736de412f?w=800&q=60';
+  const isFav = userActions.favorites && userActions.favorites.indexOf(Number(item.id)) !== -1;
+  const isSaved = userActions.saved && userActions.saved.indexOf(Number(item.id)) !== -1;
+  return `\n      <div class="event-card" data-event-id="${item.id}">\n        <div class="event-thumb" style="background-image:url('${thumb}')"></div>\n        <div class="event-body">\n          <h3 class="event-title">${escapeHtml(item.title)}</h3>\n          <p class="event-desc">${escapeHtml(item.short)}</p>\n          <div class="event-meta">\n            <span>${item.date} · ${item.time}</span>\n            <span>·</span>\n            <span>${escapeHtml(item.venue)}</span>\n            <span>·</span>\n            <span>${escapeHtml(item.city)}</span>\n          </div>\n          <div class="event-actions">\n            <button class="evt-fav ${isFav? 'is-active':''}" data-event-id="${item.id}" title="Favorite"><img src="${isFav? '/Imagini_landingPage/heart-filled.svg' : '/Imagini_landingPage/heart.png'}" alt="fav"></button>\n            <button class="evt-save ${isSaved? 'is-active':''}" data-event-id="${item.id}" title="Save"><img src="${isSaved? '/Imagini_landingPage/flag-filled.svg' : '/Imagini_landingPage/flag.png'}" alt="save"></button>\n          </div>\n        </div>\n      </div>\n    `;
     }).join('');
 
     // attach click handlers to open modal with event details
@@ -34,8 +48,107 @@
           const item = (window._lastPageItems || []).find(x=>Number(x.id)===id);
           if(item) showEventModal(item);
         });
+        // action buttons
+        const favBtn = c.querySelector('.evt-fav');
+        const saveBtn = c.querySelector('.evt-save');
+        if(favBtn){ favBtn.addEventListener('click', async (ev)=>{ ev.stopPropagation(); const id = Number(favBtn.getAttribute('data-event-id'));
+            // optimistic UI: toggle immediately then confirm with server
+            const wasActive = favBtn.classList.contains('is-active');
+            favBtn.classList.toggle('is-active');
+            // swap icon for immediate feedback
+            const favImg = favBtn.querySelector('img'); if(favImg) favImg.src = favBtn.classList.contains('is-active') ? '/Imagini_landingPage/heart-filled.svg' : '/Imagini_landingPage/heart.png';
+            const ok = await toggleFavorite(id);
+            if(!ok){ // revert if server failed
+              if(wasActive) favBtn.classList.add('is-active'); else favBtn.classList.remove('is-active');
+              const favImg2 = favBtn.querySelector('img'); if(favImg2) favImg2.src = favBtn.classList.contains('is-active') ? '/Imagini_landingPage/heart-filled.svg' : '/Imagini_landingPage/heart.png';
+            } else {
+              // keep in sync with server state (toggleFavorite updated userActions)
+              if(userActions.favorites.indexOf(id)!==-1) favBtn.classList.add('is-active'); else favBtn.classList.remove('is-active');
+              const favImg3 = favBtn.querySelector('img'); if(favImg3) favImg3.src = favBtn.classList.contains('is-active') ? '/Imagini_landingPage/heart-filled.svg' : '/Imagini_landingPage/heart.png';
+            }
+        }); }
+        if(saveBtn){ saveBtn.addEventListener('click', async (ev)=>{ ev.stopPropagation(); const id = Number(saveBtn.getAttribute('data-event-id'));
+            const wasActive2 = saveBtn.classList.contains('is-active');
+            saveBtn.classList.toggle('is-active');
+            // swap icon immediately
+            const saveImg = saveBtn.querySelector('img'); if(saveImg) saveImg.src = saveBtn.classList.contains('is-active') ? '/Imagini_landingPage/flag-filled.svg' : '/Imagini_landingPage/flag.png';
+            const ok2 = await toggleSave(id);
+            if(!ok2){ if(wasActive2) saveBtn.classList.add('is-active'); else saveBtn.classList.remove('is-active');
+              const saveImg2 = saveBtn.querySelector('img'); if(saveImg2) saveImg2.src = saveBtn.classList.contains('is-active') ? '/Imagini_landingPage/flag-filled.svg' : '/Imagini_landingPage/flag.png';
+            }
+            else { if(userActions.saved.indexOf(id)!==-1) saveBtn.classList.add('is-active'); else saveBtn.classList.remove('is-active'); }
+        }); }
       });
+      // if there's a pending event id to open (redirect from main page), try to open it now
+      if((initialEventId || pendingOpenEventId) && !initialEventHandled){
+        const want = pendingOpenEventId || initialEventId;
+        const found = (window._lastPageItems || []).find(x=>Number(x.id)===Number(want));
+        if(found){
+          initialEventHandled = true;
+          pendingOpenEventId = 0;
+          // open modal after a short delay to ensure DOM handlers are ready
+          setTimeout(()=> showEventModal(found), 120);
+        }
+      }
     },0);
+  }
+
+  // user actions helpers
+  function getCurrentUser(){ return localStorage.getItem('user') || 'demo'; }
+
+  async function loadUserActions(){
+    try{
+      const user = getCurrentUser();
+      const base = chosenApiBase || window.citybeatApiBase || '';
+      const r = await fetch((base || '') + '/api/user/' + encodeURIComponent(user) + '/actions');
+      if(!r.ok) return;
+      const js = await r.json();
+      userActions.favorites = (js.favorites || []).map(x=>Number(x));
+      userActions.saved = (js.saved || []).map(x=>Number(x));
+      userActions.reserved = (js.reserved || []).map(x=>Number(x));
+    }catch(e){ console.warn('loadUserActions failed', e); }
+  }
+
+  // returns true on success, false on failure
+  async function toggleFavorite(eventId){
+    try{
+      const user = getCurrentUser();
+  const base = chosenApiBase || window.citybeatApiBase || '';
+  const r = await fetch((base || '') + '/api/user/' + encodeURIComponent(user) + '/favorite', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ eventId }) });
+      if(!r.ok) { console.warn('fav failed', r.status); return false; }
+      const js = await r.json();
+      userActions.favorites = (js.favorites || []).map(x=>Number(x));
+      window.refreshNotifications && window.refreshNotifications();
+      return true;
+    }catch(e){ console.warn('toggleFavorite error', e); return false; }
+  }
+
+  // returns true on success, false on failure
+  async function toggleSave(eventId){
+    try{
+      const user = getCurrentUser();
+  const base = chosenApiBase || window.citybeatApiBase || '';
+  const r = await fetch((base || '') + '/api/user/' + encodeURIComponent(user) + '/save', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ eventId }) });
+      if(!r.ok) { console.warn('save failed', r.status); return false; }
+      const js = await r.json();
+      userActions.saved = (js.saved || []).map(x=>Number(x));
+      window.refreshNotifications && window.refreshNotifications();
+      return true;
+    }catch(e){ console.warn('toggleSave error', e); return false; }
+  }
+
+  // returns true on success, false on failure
+  async function reserveEvent(eventId){
+    try{
+      const user = getCurrentUser();
+  const base = chosenApiBase || window.citybeatApiBase || '';
+  const r = await fetch((base || '') + '/api/user/' + encodeURIComponent(user) + '/reserve', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ eventId }) });
+      if(!r.ok) { console.warn('reserve failed', r.status); return false; }
+      const js = await r.json();
+      userActions.reserved = (js.reserved || []).map(x=>Number(x));
+      window.refreshNotifications && window.refreshNotifications();
+      return true;
+    }catch(e){ console.warn('reserveEvent error', e); return false; }
   }
 
   function renderPager(total, page){
@@ -64,6 +177,9 @@
       const s = map[sort] || sort;
       params.set('sort', s);
     }
+    // include strict title or location search if present in URL
+    if(initialQuery) params.set('q', initialQuery);
+    if(initialLoc) params.set('loc', initialLoc);
     return params.toString();
   }
 
@@ -76,6 +192,24 @@
       if(!js || typeof js.total === 'undefined') throw new Error('bad api response');
       renderItems(js.items || []);
       renderPager(js.total || 0, js.page || currentPage);
+      // scroll to top when changing pages so user sees the new results
+      try{ if(window && window.scrollTo) window.scrollTo({ top: 0, behavior: 'smooth' }); }catch(e){ window.scrollTo(0,0); }
+      // if an initial event id is requested but not found in this page, fetch a large page to locate it
+      if(initialEventId && !initialEventHandled){
+        const foundHere = (js.items || []).find(x=> Number(x.id) === Number(initialEventId));
+        if(!foundHere){
+          // fetch a big page to find the index and compute the page that contains the event
+          fetch(base + '/api/events?page=1&pageSize=1000').then(r2=> r2.json()).then(allJs=>{
+            const all = allJs.items || [];
+            const idx = all.findIndex(x=> Number(x.id) === Number(initialEventId));
+            if(idx >= 0){
+              const pageNum = Math.floor(idx / PAGE_SIZE) + 1;
+              pendingOpenEventId = initialEventId;
+              fetchPage(pageNum);
+            }
+          }).catch(()=>{});
+        }
+      }
     }).catch(err=>{
       console.warn('API fetch failed, falling back to static events.json', err);
       useApi = false;
@@ -94,6 +228,8 @@
       const now = new Date();
       let filtered = all.filter(e=>{
         if(cat && e.category !== cat) return false;
+        if(initialQuery){ if(!String(e.title || e.Title || '').toLowerCase().includes(String(initialQuery).toLowerCase())) return false; }
+        if(initialLoc){ const locL = String(initialLoc).toLowerCase(); if(!String(e.city || e.City || '').toLowerCase().includes(locL) && !String(e.venue || e.Venue || '').toLowerCase().includes(locL)) return false; }
         if(dateFilter==='today'){
           const d = new Date(e.date);
           if(d.toDateString() !== now.toDateString()) return false;
@@ -116,6 +252,29 @@
       const pageItems = filtered.slice(start, start+PAGE_SIZE);
       renderItems(pageItems);
       renderPager(total, currentPage);
+  // scroll to top when changing pages (static fallback)
+  try{ if(window && window.scrollTo) window.scrollTo({ top: 0, behavior: 'smooth' }); }catch(e){ window.scrollTo(0,0); }
+      // handle initialEventId when using static fallback
+      if(initialEventId && !initialEventHandled){
+        const foundHere = pageItems.find(x=> Number(x.id) === Number(initialEventId));
+        if(foundHere){
+          initialEventHandled = true;
+          setTimeout(()=> showEventModal(foundHere), 120);
+        } else {
+          const idx = filtered.findIndex(x=> Number(x.id) === Number(initialEventId));
+          if(idx >= 0){
+            const pageNum = Math.floor(idx / PAGE_SIZE) + 1;
+            currentPage = pageNum;
+            const start2 = (currentPage-1)*PAGE_SIZE;
+            const pageItems2 = filtered.slice(start2, start2+PAGE_SIZE);
+            renderItems(pageItems2);
+            renderPager(total, currentPage);
+            try{ if(window && window.scrollTo) window.scrollTo({ top: 0, behavior: 'smooth' }); }catch(e){ window.scrollTo(0,0); }
+            const found = pageItems2.find(x=> Number(x.id) === Number(initialEventId));
+            if(found){ initialEventHandled = true; setTimeout(()=> showEventModal(found), 120); }
+          }
+        }
+      }
     }).catch(err=>{
       listEl.innerHTML = '<p style="color:#777">Could not load events.</p>';
       console.error(err);
@@ -131,14 +290,15 @@
     // remove any existing modal
     const existing = document.getElementById('cb-event-modal'); if(existing) existing.remove();
 
-    const modal = document.createElement('div'); modal.id = 'cb-event-modal'; modal.className = 'cb-modal';
+  const modal = document.createElement('div'); modal.id = 'cb-event-modal'; modal.className = 'cb-modal';
+    const modalThumb = item.thumb || item.Thumb || 'https://images.unsplash.com/photo-1505685296765-3a2736de412f?w=800&q=60';
     modal.innerHTML = `
       <div class="cb-modal-backdrop"></div>
       <div class="cb-modal-panel">
         <button class="cb-modal-close" aria-label="Close">×</button>
         <div class="cb-modal-grid">
           <div class="cb-modal-left">
-            <img src="${item.thumb}" alt="${escapeHtml(item.title)}" class="cb-event-image" />
+            <img src="${modalThumb}" alt="${escapeHtml(item.title)}" class="cb-event-image" />
           </div>
           <div class="cb-modal-right">
             <h2 class="cb-event-title">${escapeHtml(item.title)}</h2>
@@ -166,6 +326,8 @@
             </div>
 
             <div class="cb-modal-actions">
+              <button class="cb-btn cb-btn-fav ${ userActions.favorites && userActions.favorites.indexOf(Number(item.id))!==-1 ? 'is-active' : '' }" title="Favorite"><img src="${ userActions.favorites && userActions.favorites.indexOf(Number(item.id))!==-1 ? '/Imagini_landingPage/heart-filled.svg' : '/Imagini_landingPage/heart.png' }" alt="fav"></button>
+              <button class="cb-btn cb-btn-save ${ userActions.saved && userActions.saved.indexOf(Number(item.id))!==-1 ? 'is-active' : '' }" title="Save"><img src="${ userActions.saved && userActions.saved.indexOf(Number(item.id))!==-1 ? '/Imagini_landingPage/flag-filled.svg' : '/Imagini_landingPage/flag.png' }" alt="save"></button>
               <button class="cb-btn cb-btn-cancel" style="background:#CF142B; display:none;">Cancel participation</button>
               <button class="cb-btn cb-btn-share">Share</button>
               <button class="cb-btn cb-btn-reserve" style="background:var(--purple); color:#fff;">Reserve</button>
@@ -195,11 +357,21 @@
     closeBtn.addEventListener('click', closeModal);
     backdrop.addEventListener('click', closeModal);
 
-    reserveBtn.addEventListener('click', ()=>{
-      // show cancel button when reserved
-      cancelBtn.style.display = 'inline-block';
+    reserveBtn.addEventListener('click', async ()=>{
+      const id = Number(item.id);
+      // optimistic UI: disable while contacting server
       reserveBtn.disabled = true;
-      reserveBtn.textContent = 'Reserved';
+      reserveBtn.textContent = 'Reserving...';
+      const ok = await reserveEvent(id);
+      if(ok){
+        cancelBtn.style.display = 'inline-block';
+        reserveBtn.textContent = 'Reserved';
+      } else {
+        reserveBtn.disabled = false;
+        reserveBtn.textContent = 'Reserve';
+        // optionally show a small alert
+        console.warn('Reservation failed for event', id);
+      }
     });
 
     cancelBtn.addEventListener('click', ()=>{
@@ -208,6 +380,33 @@
       reserveBtn.disabled = false;
       reserveBtn.textContent = 'Reserve';
     });
+
+  // favorite / save buttons in modal
+  const favBtnModal = modal.querySelector('.cb-btn-fav');
+  const saveBtnModal = modal.querySelector('.cb-btn-save');
+  if(favBtnModal){ favBtnModal.addEventListener('click', async ()=>{
+    const id = Number(item.id);
+    const wasActive = favBtnModal.classList.contains('is-active');
+    favBtnModal.classList.toggle('is-active');
+    const favImgModal = favBtnModal.querySelector('img'); if(favImgModal) favImgModal.src = favBtnModal.classList.contains('is-active') ? '/Imagini_landingPage/heart-filled.svg' : '/Imagini_landingPage/heart.png';
+    const ok = await toggleFavorite(id);
+    if(!ok){ // revert
+      if(wasActive) favBtnModal.classList.add('is-active'); else favBtnModal.classList.remove('is-active');
+      const favImgModal2 = favBtnModal.querySelector('img'); if(favImgModal2) favImgModal2.src = favBtnModal.classList.contains('is-active') ? '/Imagini_landingPage/heart-filled.svg' : '/Imagini_landingPage/heart.png';
+    } else {
+      // sync card button too
+      const cardBtn = document.querySelector('.evt-fav[data-event-id="'+item.id+'"]'); if(cardBtn){ if(userActions.favorites.indexOf(id)!==-1) cardBtn.classList.add('is-active'); else cardBtn.classList.remove('is-active'); const cbImg = cardBtn.querySelector('img'); if(cbImg) cbImg.src = cardBtn.classList.contains('is-active') ? '/Imagini_landingPage/heart-filled.svg' : '/Imagini_landingPage/heart.png'; }
+    }
+  }); }
+  if(saveBtnModal){ saveBtnModal.addEventListener('click', async ()=>{
+    const id = Number(item.id);
+    const wasActive2 = saveBtnModal.classList.contains('is-active');
+    saveBtnModal.classList.toggle('is-active');
+    const saveImgModal = saveBtnModal.querySelector('img'); if(saveImgModal) saveImgModal.src = saveBtnModal.classList.contains('is-active') ? '/Imagini_landingPage/flag-filled.svg' : '/Imagini_landingPage/flag.png';
+    const ok2 = await toggleSave(id);
+    if(!ok2){ if(wasActive2) saveBtnModal.classList.add('is-active'); else saveBtnModal.classList.remove('is-active'); const saveImgModal2 = saveBtnModal.querySelector('img'); if(saveImgModal2) saveImgModal2.src = saveBtnModal.classList.contains('is-active') ? '/Imagini_landingPage/flag-filled.svg' : '/Imagini_landingPage/flag.png'; }
+    else { const cardBtn2 = document.querySelector('.evt-save[data-event-id="'+item.id+'"]'); if(cardBtn2){ if(userActions.saved.indexOf(id)!==-1) cardBtn2.classList.add('is-active'); else cardBtn2.classList.remove('is-active'); const cbImg2 = cardBtn2.querySelector('img'); if(cbImg2) cbImg2.src = cardBtn2.classList.contains('is-active') ? '/Imagini_landingPage/flag-filled.svg' : '/Imagini_landingPage/flag.png'; } }
+  }); }
 
     shareBtn.addEventListener('click', ()=>{
       shareList.style.display = shareList.style.display === 'none' ? 'block' : 'none';
@@ -235,7 +434,14 @@
           const cats = await r.json();
           if(Array.isArray(cats) && cats.length){
             categorySelect.innerHTML = '<option value="">All Categories</option>' + cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+            // if a category was passed via URL, pre-select it
+            if(initialCategory){
+              const found = cats.find(x=>x === initialCategory);
+              if(found) categorySelect.value = initialCategory;
+            }
             chosenApiBase = base;
+            exposeApiBase();
+            await loadUserActions();
             return fetchPage(1);
           }
         }
@@ -252,13 +458,25 @@
         const items = js.items || [];
         const cats = Array.from(new Set(items.map(e=>e.category))).sort();
         categorySelect.innerHTML = '<option value="">All Categories</option>' + cats.map(c=>`<option value="${c}">${c}</option>`).join('');
-        chosenApiBase = base;
-        return fetchPage(1);
+        if(initialCategory){
+          const found2 = cats.find(x=>x === initialCategory);
+          if(found2) categorySelect.value = initialCategory;
+        }
+  chosenApiBase = base;
+  exposeApiBase();
+  await loadUserActions();
+  return fetchPage(1);
       }catch(err){
         return tryBase(idx+1);
       }
     };
+    // detect API base and then load user actions and the first page (tryBase will call loadUserActions)
     tryBase(0);
+  }
+
+  // after chosenApiBase is determined, expose it to other scripts
+  function exposeApiBase(){
+    try{ window.citybeatApiBase = chosenApiBase || ''; }catch(e){}
   }
 
   categorySelect.addEventListener('change', ()=>{ currentPage = 1; if(useApi) fetchPage(1); else fetchStaticAndRender(); });
