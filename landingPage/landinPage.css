@@ -39,8 +39,21 @@ body {
 .hero-subtext { margin-top: 12px; max-width: 900px; color: rgba(255,255,255,0.95); line-height: 1.6; }
 
 .hero-buttons { margin-top: 22px; display: flex; gap: 16px; }
+.btn-filled, .btn-outline-dark { 
+  border: none; 
+  cursor: pointer; 
+  text-decoration: none; 
+  display: inline-flex; 
+  align-items: center; 
+  justify-content: center; 
+  transition: transform 120ms ease, box-shadow 120ms ease; 
+}
 .btn-filled { background: #7c2df0; color: #fff; border-radius: 28px; padding: 12px 26px; font-weight: 700; }
 .btn-outline-dark { background: #fff; color: #222; padding: 10px 22px; border-radius: 22px; font-weight: 700; }
+
+/* hover and active states for buttons */
+.btn-filled:hover, .btn-outline-dark:hover { transform: translateY(-1px); }
+.btn-filled:active, .btn-outline-dark:active { transform: translateY(1px) scale(0.995); }
 
 /* EVENTS SECTION */
 .events-section { padding: 36px 20px 60px; }

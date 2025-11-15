@@ -186,14 +186,21 @@
       // robust profile menu wiring using event delegation so it works even when header is injected
       (function(){
         let pm = null;
+        
+        // Define updateProfileMenuContent globally first
+        window.updateProfileMenuContent = function(menu) {
+          const userName = localStorage.getItem('userName') || 'Milo James';
+          const userEmail = localStorage.getItem('userEmail') || 'milo.james@example.com';
+          const userAvatar = localStorage.getItem('userAvatar') || 'https://randomuser.me/api/portraits/men/75.jpg';
+          menu.innerHTML = `<div class="pm-header"><img src="${userAvatar}"><div><div class="pm-name">${userName}</div><div class="pm-email">${userEmail}</div></div></div><ul class="pm-list"><li data-action="profile">Profile</li><li data-action="settings">Settings</li><li data-action="logout">Logout</li></ul>`;
+        };
+        
         function ensureMenu(){
           if(pm) return pm;
           pm = document.querySelector('.profile-menu');
           if(!pm){
             pm = document.createElement('div'); pm.className = 'profile-menu';
-            const userName = localStorage.getItem('userName') || 'Milo James';
-            const userEmail = localStorage.getItem('userEmail') || 'milo.james@example.com';
-            pm.innerHTML = `<div class="pm-header"><img src="https://randomuser.me/api/portraits/men/75.jpg"><div><div class="pm-name">${userName}</div><div class="pm-email">${userEmail}</div></div></div><ul class="pm-list"><li data-action="profile">Profile</li><li data-action="settings">Settings</li></ul>`;
+            window.updateProfileMenuContent(pm);
             document.body.appendChild(pm);
           }
           return pm;
@@ -201,6 +208,8 @@
 
         function showMenuFor(button){
           const menu = ensureMenu();
+          // Update content with latest data before showing
+          window.updateProfileMenuContent(menu);
           // toggle
           if(menu.style.display === 'block') { menu.style.display = 'none'; return; }
           menu.style.display = 'block';
@@ -226,9 +235,16 @@
             const act = clickedMenuItem.getAttribute('data-action');
             if(act === 'profile'){
               fetch('/profile/index.html', { method: 'HEAD' }).then(r=>{ if(r.ok) location.href = '/profile/index.html'; else console.warn('Profile page not found'); }).catch(()=> console.warn('Profile page not found'));
-            } else if(act === 'settings'){
-              alert('Settings coming soon');
-            }
+              } else if(act === 'settings'){
+                fetch('/settings/index.html', { method: 'HEAD' }).then(r=>{ if(r.ok) location.href = '/settings/index.html'; else console.warn('Settings page not found'); }).catch(()=> console.warn('Settings page not found'));
+              } else if(act === 'logout'){
+                // confirmation modal
+                if(confirm('Log out and return to landing page?')){
+                  // clear stored user info and redirect
+                  localStorage.removeItem('user'); localStorage.removeItem('userName'); localStorage.removeItem('userEmail');
+                  location.href = '/landingPage/index.html';
+                }
+              }
             return;
           }
           // click elsewhere
@@ -256,9 +272,7 @@
           let m = document.querySelector('.profile-menu');
           if(!m){
             m = document.createElement('div'); m.className = 'profile-menu';
-            const userName = localStorage.getItem('userName') || 'Milo James';
-            const userEmail = localStorage.getItem('userEmail') || 'milo.james@example.com';
-            m.innerHTML = `<div class="pm-header"><img src="https://randomuser.me/api/portraits/men/75.jpg"><div><div class="pm-name">${userName}</div><div class="pm-email">${userEmail}</div></div></div><ul class="pm-list"><li data-action="profile">Profile</li><li data-action="settings">Settings</li></ul>`;
+            if(window.updateProfileMenuContent) window.updateProfileMenuContent(m);
             m.style.position = 'absolute'; m.style.display = 'none'; m.style.zIndex = 2000; m.style.width = '260px';
             document.body.appendChild(m);
           }
@@ -296,10 +310,23 @@
             profileBtn.addEventListener('click', (e)=>{
               e.stopPropagation();
               const pm = ensureProfileMenuGlobal();
+              // Update content with latest data before showing
+              if(window.updateProfileMenuContent) window.updateProfileMenuContent(pm);
               if(pm.style.display === 'block'){ pm.style.display = 'none'; return; }
               positionPanelUnder(pm, profileBtn);
             });
           }
+          
+          // Make updateProfileMenuContent available globally for profile page
+          window.updateGlobalProfile = function(userName, userEmail, userAvatar) {
+            // Update profile menu
+            const pm = document.querySelector('.profile-menu');
+            if(pm && window.updateProfileMenuContent) window.updateProfileMenuContent(pm);
+            
+            // Update profile image in header
+            const headerImg = document.querySelector('.profile-img');
+            if(headerImg && userAvatar) headerImg.src = userAvatar;
+          };
           // hide panels when clicking elsewhere
           document.addEventListener('click', ()=>{ const p = document.querySelector('.notif-panel'); if(p) p.style.display = 'none'; const m = document.querySelector('.profile-menu'); if(m) m.style.display = 'none'; });
         }, 200);
@@ -323,6 +350,73 @@
   </div>
   </div>
 </nav>
+
+  <script>
+    // Show header features site-wide except on the landing page.
+    // Landing pages are identified by paths that include '/landingPage/' or '/landingPage.html' or root '/'.
+    (function(){
+      try{
+        const p = location.pathname || '';
+        const isLanding = p === '/' || p.includes('/landingPage/') || p.endsWith('/landingPage.html') || p.toLowerCase().endsWith('/index.html') && p.toLowerCase().includes('/landingpage/');
+        const searchGroup = document.querySelector('.search-group');
+        const userButtons = document.querySelector('.user-buttons');
+        const authButtons = document.querySelector('.auth-buttons');
+        const exploreCreate = document.querySelector('.explore-create');
+
+        if(isLanding){
+          if(searchGroup) searchGroup.style.display = 'none';
+          if(userButtons) userButtons.style.display = 'none';
+          if(authButtons) authButtons.style.display = 'flex';
+          if(exploreCreate) exploreCreate.style.display = 'flex';
+        } else {
+          if(searchGroup) { searchGroup.style.display = 'flex'; searchGroup.setAttribute('aria-hidden','false'); }
+          if(userButtons) { userButtons.style.display = 'flex'; userButtons.setAttribute('aria-hidden','false'); }
+          if(authButtons) authButtons.style.display = 'none';
+          if(exploreCreate) exploreCreate.style.display = 'none';
+        }
+      }catch(e){ console.warn('header visibility script error', e); }
+    })();
+  </script>
+
+  <script>
+    // set profile image in header from stored user profile (prioritize localStorage)
+    (async function(){
+      try{
+        // First check localStorage for avatar
+        const localAvatar = localStorage.getItem('userAvatar');
+        if(localAvatar) {
+          const img = document.querySelector('.profile-img'); 
+          if(img) img.src = localAvatar;
+          // update any profile-menu images if present
+          document.querySelectorAll('.profile-menu img, .pm-header img').forEach(i=>{ try{i.src = localAvatar;}catch{} });
+          return; // Use localStorage data if available
+        }
+        
+        // Fallback to API if no localStorage data
+        const user = localStorage.getItem('user') || 'demo';
+        const candidates = [ window.citybeatApiBase || '', 'http://localhost:5000', 'http://127.0.0.1:5000' ];
+        for(const b of candidates){
+          try{
+            const base = b || '';
+            const res = await fetch(base + '/api/user/' + encodeURIComponent(user));
+            if(!res.ok) continue;
+            const j = await res.json();
+            const profile = (j && j.profile) || j;
+            const avatar = profile?.avatarDataUrl || profile?.avatar || '';
+            if(avatar){
+              const img = document.querySelector('.profile-img'); if(img) img.src = avatar;
+              // update any profile-menu images if present
+              document.querySelectorAll('.profile-menu img, .pm-header img').forEach(i=>{ try{i.src = avatar;}catch{} });
+              // Store in localStorage for future use
+              localStorage.setItem('userAvatar', avatar);
+              window.citybeatApiBase = base || window.citybeatApiBase || '';
+              break;
+            }
+          }catch(e){ /* try next candidate */ }
+        }
+      }catch(e){ console.warn('setProfileImage error', e); }
+    })();
+  </script>
 
 <!-- Auth modal (opened by linking to #auth-modal) -->
 <div id="auth-modal" class="auth-modal" aria-hidden="true">

@@ -48,7 +48,18 @@
     fetch('/header/header.html')
       .then(r => r.text())
       .then(html => {
-        document.getElementById('site-header').innerHTML = html;
+        const container = document.getElementById('site-header');
+        container.innerHTML = html;
+        // evaluate inline scripts from header by recreating script elements
+        const scripts = container.querySelectorAll('script');
+        scripts.forEach(s => {
+          try{
+            const ns = document.createElement('script');
+            if(s.src){ ns.src = s.src; ns.async = false; document.head.appendChild(ns); }
+            else { ns.textContent = s.textContent; document.head.appendChild(ns); }
+          }catch(e){ console.warn('failed to eval header script', e); }
+          s.parentNode && s.parentNode.removeChild(s);
+        });
   // ensure nav, search and user buttons are visible on non-landing pages; hide Explore/Create
   const top = document.querySelector('.top-nav'); if (top) top.style.display = '';
   const search = document.querySelector('.search-group'); if (search) search.style.display = 'flex';

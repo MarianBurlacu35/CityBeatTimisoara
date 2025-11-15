@@ -119,6 +119,8 @@ app.MapGet("/api/user/{user}/actions", (string user) => {
 
 app.MapGet("/api/user/{user}/notifications", (string user) => {
     var rec = EnsureUser(user);
+    // if notifications disabled for this user, return empty list
+    if(!rec.NotificationsEnabled) return Results.Json(new List<Notification>());
     // return most recent first
     var list = rec.Notifications.OrderByDescending(n=>n.Timestamp).ToList();
     return Results.Json(list);
@@ -138,7 +140,7 @@ app.MapPost("/api/user/{user}/favorite", async (HttpRequest req, string user) =>
                     rec.Notifications.Add(new Notification{ Id = Guid.NewGuid().ToString(), Timestamp = DateTime.UtcNow, Message = $"Removed from favorites: {evTitleFav}", EventId = eventId, Read = false });
                 } else {
                     rec.Favorites.Add(eventId);
-                    rec.Notifications.Add(new Notification{ Id = Guid.NewGuid().ToString(), Timestamp = DateTime.UtcNow, Message = $"Added to favorites: {evTitleFav}", EventId = eventId, Read = false });
+                    if(rec.NotificationsEnabled) rec.Notifications.Add(new Notification{ Id = Guid.NewGuid().ToString(), Timestamp = DateTime.UtcNow, Message = $"Added to favorites: {evTitleFav}", EventId = eventId, Read = false });
                 }
                 PersistStore();
             }
@@ -162,7 +164,7 @@ app.MapPost("/api/user/{user}/save", async (HttpRequest req, string user) => {
                     rec.Notifications.Add(new Notification{ Id = Guid.NewGuid().ToString(), Timestamp = DateTime.UtcNow, Message = $"Removed from saved: {evTitleSave}", EventId = eventId, Read = false });
                 } else {
                     rec.Saved.Add(eventId);
-                    rec.Notifications.Add(new Notification{ Id = Guid.NewGuid().ToString(), Timestamp = DateTime.UtcNow, Message = $"Saved event: {evTitleSave}", EventId = eventId, Read = false });
+                    if(rec.NotificationsEnabled) rec.Notifications.Add(new Notification{ Id = Guid.NewGuid().ToString(), Timestamp = DateTime.UtcNow, Message = $"Saved event: {evTitleSave}", EventId = eventId, Read = false });
                 }
                 PersistStore();
             }
@@ -184,7 +186,7 @@ app.MapPost("/api/user/{user}/reserve", async (HttpRequest req, string user) => 
                 var evTitleRes = events.FirstOrDefault(x=> x.Id == eventId)?.Title ?? $"event {eventId}";
                 if(!rec.Reserved.Contains(eventId)){
                     rec.Reserved.Add(eventId);
-                    rec.Notifications.Add(new Notification{ Id = Guid.NewGuid().ToString(), Timestamp = DateTime.UtcNow, Message = $"Reserved a ticket for {evTitleRes}", EventId = eventId, Read = false });
+                    if(rec.NotificationsEnabled) rec.Notifications.Add(new Notification{ Id = Guid.NewGuid().ToString(), Timestamp = DateTime.UtcNow, Message = $"Reserved a ticket for {evTitleRes}", EventId = eventId, Read = false });
                 }
                 PersistStore();
             }
@@ -210,6 +212,69 @@ app.MapPost("/api/user/{user}/notifications/markread", async (HttpRequest req, s
         }
     }catch{}
     return Results.BadRequest();
+});
+
+// get or update profile
+app.MapGet("/api/user/{user}/profile", (string user) => {
+    var rec = EnsureUser(user);
+    return Results.Json(rec.Profile);
+});
+
+app.MapPost("/api/user/{user}/profile", async (HttpRequest req, string user) => {
+    var rec = EnsureUser(user);
+    using var sr = new StreamReader(req.Body);
+    var body = await sr.ReadToEndAsync();
+    try{
+        var doc = JsonSerializer.Deserialize<UserProfile>(body, new JsonSerializerOptions{ PropertyNameCaseInsensitive = true });
+        if(doc != null){ lock(storeLock){ rec.Profile = doc; PersistStore(); } return Results.Ok(rec.Profile); }
+    }catch{}
+    return Results.BadRequest();
+});
+
+// toggle notifications setting
+app.MapPost("/api/user/{user}/settings/notifications", async (HttpRequest req, string user) => {
+    var rec = EnsureUser(user);
+    using var sr = new StreamReader(req.Body);
+    var body = await sr.ReadToEndAsync();
+    try{
+        var doc = JsonSerializer.Deserialize<Dictionary<string,bool>>(body);
+        if(doc != null && doc.TryGetValue("enabled", out var enabled)){
+            lock(storeLock){ rec.NotificationsEnabled = enabled; PersistStore(); }
+            return Results.Ok(new { enabled = rec.NotificationsEnabled });
+        }
+    }catch{}
+    return Results.BadRequest();
+});
+
+// change password
+app.MapPost("/api/user/{user}/change-password", async (HttpRequest req, string user) => {
+    var rec = EnsureUser(user);
+    using var sr = new StreamReader(req.Body);
+    var body = await sr.ReadToEndAsync();
+    try{
+        var doc = JsonSerializer.Deserialize<Dictionary<string,string>>(body);
+        if(doc != null){
+            doc.TryGetValue("oldPassword", out var oldP);
+            doc.TryGetValue("newPassword", out var newP);
+            // if password not set, allow set; otherwise verify
+            lock(storeLock){
+                if(string.IsNullOrEmpty(rec.Password) || rec.Password == oldP){
+                    rec.Password = newP ?? string.Empty;
+                    PersistStore();
+                    return Results.Ok(new { success = true });
+                } else {
+                    return Results.Json(new { success = false, message = "Old password mismatch" });
+                }
+            }
+        }
+    }catch{}
+    return Results.BadRequest();
+});
+
+// return a lightweight user summary (settings) - useful for settings page
+app.MapGet("/api/user/{user}", (string user) => {
+    var rec = EnsureUser(user);
+    return Results.Json(new { notificationsEnabled = rec.NotificationsEnabled, profile = rec.Profile });
 });
 
 
@@ -313,7 +378,43 @@ app.MapGet("/api/events/categories", () => {
 
 app.MapGet("/", () => Results.Redirect("/api/events"));
 
-app.Run();
+// Contact endpoint: receive contact form submissions and send an email to site owner
+app.MapPost("/api/contact", async (HttpRequest req) => {
+    try{
+        using var sr = new StreamReader(req.Body);
+        var body = await sr.ReadToEndAsync();
+        var doc = JsonSerializer.Deserialize<Dictionary<string,string>>(body, new JsonSerializerOptions{ PropertyNameCaseInsensitive = true });
+        if(doc == null) return Results.BadRequest();
+        doc.TryGetValue("nature", out var nature);
+        doc.TryGetValue("message", out var message);
+        doc.TryGetValue("email", out var fromEmail);
+
+    // recipient (site owner) - can be overridden with CONTACT_OWNER_EMAIL env var
+    var to = Environment.GetEnvironmentVariable("CONTACT_OWNER_EMAIL") ?? "marian-cosmin.burlacu@student.tuiasi.ro";
+        var subject = $"Contact form: {(nature ?? "General")}";
+    var bodyHtml = $"<p><strong>Nature:</strong> {System.Net.WebUtility.HtmlEncode(nature ?? "")}</p><p><strong>From:</strong> {System.Net.WebUtility.HtmlEncode(fromEmail ?? "(not provided)")}</p><hr/><div>{System.Net.WebUtility.HtmlEncode(message ?? "")}</div>";
+
+        // Try to send the message using the user's email as the reply-to (and as From when possible).
+        var (ok, msg) = await EmailSender.SendAsync(to, subject, bodyHtml, fromAddress: fromEmail, replyTo: fromEmail);
+        if(ok) return Results.Ok(new { success = true, message = "Sent" });
+        // If SMTP wasn't configured we still persist the message to a local log — surface success to the user but include a warning message.
+        if(msg != null && msg.Contains("SMTP not configured")){
+            return Results.Ok(new { success = true, message = "Logged (SMTP not configured)." });
+        }
+        return Results.Json(new { success = false, error = msg }, statusCode: 500);
+    }catch(Exception ex){
+        return Results.Json(new { success = false, error = ex.Message }, statusCode: 500);
+    }
+});
+
+try{
+    Console.WriteLine("[EventsApi] Starting app.Run()...");
+    app.Run();
+    Console.WriteLine("[EventsApi] app.Run() returned normally.");
+}catch(Exception ex){
+    Console.WriteLine("[EventsApi] app.Run() threw: " + ex);
+    throw;
+}
 
 
 public class EventItem{
@@ -348,6 +449,21 @@ public class UserRecord{
     public List<int> Saved { get; set; } = new List<int>();
     public List<int> Reserved { get; set; } = new List<int>();
     public List<Notification> Notifications { get; set; } = new List<Notification>();
+    // simple profile & settings
+    public string Password { get; set; } = string.Empty;
+    public bool NotificationsEnabled { get; set; } = true;
+    public UserProfile Profile { get; set; } = new UserProfile();
+}
+
+public class UserProfile{
+    public string Name { get; set; } = string.Empty;
+    public string Summary { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string Country { get; set; } = string.Empty;
+    public string City { get; set; } = string.Empty;
+    public string Street { get; set; } = string.Empty;
+    // optional avatar stored as data URL
+    public string AvatarDataUrl { get; set; } = string.Empty;
 }
 
 public class Notification{

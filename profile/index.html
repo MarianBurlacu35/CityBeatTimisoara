@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CityBeat — Profile</title>
+  <link rel="stylesheet" href="/header/header.css">
+  <link rel="stylesheet" href="profile.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="profile-main">
+    <section class="profile-panel">
+      <h1>Edit Profile</h1>
+      <div class="profile-grid">
+        <div class="profile-form">
+          <label>Name<input id="pf-name" type="text" /></label>
+          <label>Summary<textarea id="pf-summary"></textarea></label>
+          <label>Email<input id="pf-email" type="email" /></label>
+          <label>Country<input id="pf-country" type="text" /></label>
+          <label>City<input id="pf-city" type="text" /></label>
+          <label>Street<input id="pf-street" type="text" /></label>
+          <div class="profile-actions">
+            <button id="pf-cancel">Cancel</button>
+            <button id="pf-save" class="primary">Save Changes</button>
+          </div>
+        </div>
+        <aside class="profile-avatar">
+          <div class="avatar-preview" id="avatar-preview"></div>
+          <input id="avatar-input" type="file" accept="image/*" />
+          <label for="avatar-input" class="custom-file-upload" id="file-upload-label">
+            Choose Photo
+          </label>
+        </aside>
+      </div>
+    </section>
+  </main>
+  <div id="site-footer"></div>
+
+  <script>
+    // inject header/footer and execute scripts as other pages
+    fetch('/header/header.html').then(r=>r.text()).then(html=>{ document.getElementById('site-header').innerHTML = html; const scripts = document.getElementById('site-header').querySelectorAll('script'); scripts.forEach(s=>{ const ns = document.createElement('script'); if(s.src){ ns.src = s.src; ns.async=false; document.head.appendChild(ns); } else { ns.textContent = s.textContent; document.head.appendChild(ns); } s.remove(); }); });
+    fetch('/footer/footer.html').then(r=>r.text()).then(html=>document.getElementById('site-footer').innerHTML = html).catch(()=>{});
+  </script>
+  <script src="profile.js"></script>
+</body>
+</html>

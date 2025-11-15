@@ -17,14 +17,16 @@ body{ font-family: Inter, system-ui, Arial, sans-serif; margin:0; background:#fa
 .event-desc{ margin:0;color:#555 }
 .event-meta{ display:flex; gap:12px; align-items:center; color:#666; font-size:13px; margin-top:8px }
 .event-actions{ margin-top:10px; display:flex; gap:8px }
-.event-actions .evt-fav, .event-actions .evt-save{ border:none; background:transparent; cursor:pointer; font-size:18px; padding:6px }
-.event-actions .evt-fav img, .event-actions .evt-save img{ width:20px; height:20px; display:block }
-.event-actions .evt-fav.is-active img{ transform: scale(1.02); }
-.event-actions .evt-save.is-active img{ transform: scale(1.02); }
-.cb-btn-fav, .cb-btn-save{ padding:8px 12px; border-radius:8px; border:none; cursor:pointer; background:#fff }
-.cb-btn-fav img, .cb-btn-save img{ width:18px; height:18px; vertical-align:middle }
-.cb-btn-fav.is-active img{ transform: scale(1.02); }
-.cb-btn-save.is-active img{ transform: scale(1.02); }
+.event-actions .evt-fav, .event-actions .evt-save{ border:none; background:transparent; cursor:pointer; padding:6px; border-radius:6px; transition: background 0.2s ease }
+.event-actions .evt-fav:hover, .event-actions .evt-save:hover{ background: rgba(117,20,201,0.05) }
+.event-actions .evt-fav img, .event-actions .evt-save img{ width:20px; height:20px; display:block; transition: transform 0.2s ease }
+.event-actions .evt-fav.is-active img{ transform: scale(1.1); }
+.event-actions .evt-save.is-active img{ transform: scale(1.1); }
+.cb-btn-fav, .cb-btn-save{ padding:8px 12px; border-radius:8px; border:none; cursor:pointer; background:transparent; transition: background 0.2s ease }
+.cb-btn-fav:hover, .cb-btn-save:hover{ background: rgba(117,20,201,0.05) }
+.cb-btn-fav img, .cb-btn-save img{ width:18px; height:18px; vertical-align:middle; transition: transform 0.2s ease }
+.cb-btn-fav.is-active img{ transform: scale(1.1); }
+.cb-btn-save.is-active img{ transform: scale(1.1); }
 /* smooth icon transitions */
 .event-actions .evt-fav img, .event-actions .evt-save img, .cb-btn-fav img, .cb-btn-save img{ transition: transform .14s ease, opacity .12s ease; }
 
@@ -49,6 +51,162 @@ body{ font-family: Inter, system-ui, Arial, sans-serif; margin:0; background:#fa
 .cb-event-schedule{ margin:12px 0 }
 .cb-schedule-columns{ display:flex; gap:18px }
 .cb-contact-details{ margin-top:12px; background:#fafafa; padding:10px; border-radius:8px; color:#222 }
+
+/* Reserve Popup Styles */
+.reserve-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.reserve-popup-content {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.reserve-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.reserve-header h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #333;
+}
+
+.close-popup {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-popup:hover {
+  color: #333;
+}
+
+.reserve-body {
+  padding: 20px;
+  display: flex;
+  gap: 24px;
+}
+
+.qr-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* QR Code Styles */
+#qrcode canvas {
+  border: 2px solid #ddd;
+  border-radius: 8px;
+}
+
+.qr-grid {
+  display: grid;
+  grid-template-columns: repeat(21, 1fr);
+  gap: 1px;
+  background: #fff;
+  padding: 4px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  width: 140px;
+  height: 140px;
+}
+
+.qr-cell {
+  width: 100%;
+  height: 100%;
+  border-radius: 1px;
+}
+
+.qr-cell.black {
+  background: #000;
+}
+
+.qr-cell.white {
+  background: #fff;
+}
+
+.qr-cell.white {
+  background: #fff;
+}
+
+.qr-code-text {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.event-details {
+  flex: 1;
+}
+
+.event-details h3 {
+  margin: 0 0 16px;
+  color: #333;
+  font-size: 18px;
+}
+
+.detail-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: #555;
+}
+
+.detail-row .icon {
+  font-size: 16px;
+  width: 20px;
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .reserve-popup-content {
+    width: 95%;
+    margin: 20px;
+  }
+  
+  .reserve-body {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .qr-grid {
+    width: 120px;
+    height: 120px;
+  }
+}
 .cb-modal-actions{ margin-top:14px; display:flex; gap:10px; align-items:center }
 .cb-btn{ padding:8px 14px; border-radius:8px; border:none; cursor:pointer }
 .cb-btn-reserve{ background:var(--purple); color:#fff }

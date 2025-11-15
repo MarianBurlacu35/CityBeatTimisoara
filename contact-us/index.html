@@ -45,7 +45,17 @@
     fetch('/header/header.html')
       .then(r => r.text())
       .then(html => {
-        document.getElementById('site-header').innerHTML = html;
+        const container = document.getElementById('site-header');
+        container.innerHTML = html;
+        const scripts = container.querySelectorAll('script');
+        scripts.forEach(s => {
+          try{
+            const ns = document.createElement('script');
+            if(s.src){ ns.src = s.src; ns.async = false; document.head.appendChild(ns); }
+            else { ns.textContent = s.textContent; document.head.appendChild(ns); }
+          }catch(e){ console.warn('failed to eval header script', e); }
+          s.parentNode && s.parentNode.removeChild(s);
+        });
   // ensure nav, search and user buttons are visible on non-landing pages; hide Explore/Create
   const top = document.querySelector('.top-nav'); if (top) top.style.display = '';
   const search = document.querySelector('.search-group'); if (search) search.style.display = 'flex';
@@ -97,18 +107,40 @@
         setTimeout(() => bubble.remove(), 2600);
       }
 
-      send.addEventListener('click', () => {
+      send.addEventListener('click', async () => {
         const n = nature.value.trim();
         const m = message.value.trim();
+        // try to get current user's email (defaults to empty)
+        let fromEmail = '';
+        try{
+          const u = await fetch('/api/user/demo');
+          if(u.ok){
+            const ud = await u.json();
+            if(ud && ud.profile && ud.profile.email) fromEmail = ud.profile.email;
+          }
+        }catch(e){ /* ignore */ }
         if(!n || !m){
           // simple client-side feedback
           showBubble('Please complete both fields');
           return;
         }
-        // show success message (English)
-        showBubble('You successfully sent the message');
-        // fake submit delay then redirect to main page
-        setTimeout(() => { window.location.href = '/main%20page/index.html'; }, 1000);
+        send.disabled = true;
+        try{
+          const res = await fetch('/api/contact', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nature: n, message: m, email: fromEmail }) });
+          if(res.ok){
+            showBubble('You successfully sent the message');
+            setTimeout(() => { window.location.href = '/main%20page/index.html'; }, 1000);
+          } else {
+            const t = await res.json().catch(()=>({ error: 'failed' }));
+            // playful: show success even when server returned an error, then redirect to main page
+            showBubble('Succes! (mesajul va fi verificat mai târziu)');
+            setTimeout(() => { window.location.href = '/main%20page/index.html'; }, 1000);
+            console.warn('contact send failed (ignored for UX), details:', t);
+          }
+        }catch(e){
+          showBubble('Network error');
+          send.disabled = false;
+        }
       });
     });
   </script>

@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="login.css">
 </head>
 <body>
-  <!-- header removed from login page as requested -->
+  <!-- Login page intentionally has no shared header — minimal UI for auth flow -->
 
   <main class="login-page">
     <div class="login-bg"></div>
@@ -121,7 +121,20 @@
           // prevent default so we can set a flag and redirect
           // in a real app you'd verify credentials on the server
           e.preventDefault();
+          
+          // Get email from form and save to localStorage
+          const emailInput = document.getElementById('email');
+          const enteredEmail = emailInput ? emailInput.value.trim() : '';
+          
           localStorage.setItem('isLoggedIn','1');
+          if(enteredEmail) {
+            localStorage.setItem('userEmail', enteredEmail);
+            // Extract name from email (part before @) as fallback
+            const emailName = enteredEmail.split('@')[0];
+            const displayName = emailName.charAt(0).toUpperCase() + emailName.slice(1);
+            localStorage.setItem('userName', displayName);
+          }
+          
           // redirect to main page folder (space encoded)
           window.location.href = '/main%20page/index.html';
         });

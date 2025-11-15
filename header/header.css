@@ -25,8 +25,8 @@
 .navbar-right { display: flex; align-items: center; gap: 12px; }
 .nav-link { color: white; text-decoration: none; }
 
-/* reduce spacing between Explore and Create by 2px */
-.nav-link + .nav-link { margin-left: -2px; }
+/* add 15px spacing between Explore and Create buttons */
+.explore-create { display: flex; gap: 15px; align-items: center; }
 /* reduce spacing between login and signup by 2px */
 .btn-login + .btn-signup { margin-left: -2px; }
 

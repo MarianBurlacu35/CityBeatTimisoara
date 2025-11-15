@@ -359,19 +359,9 @@
 
     reserveBtn.addEventListener('click', async ()=>{
       const id = Number(item.id);
-      // optimistic UI: disable while contacting server
-      reserveBtn.disabled = true;
-      reserveBtn.textContent = 'Reserving...';
-      const ok = await reserveEvent(id);
-      if(ok){
-        cancelBtn.style.display = 'inline-block';
-        reserveBtn.textContent = 'Reserved';
-      } else {
-        reserveBtn.disabled = false;
-        reserveBtn.textContent = 'Reserve';
-        // optionally show a small alert
-        console.warn('Reservation failed for event', id);
-      }
+      // Show QR popup instead of simple reservation
+      showQRCodePopup(item);
+      closeModal();
     });
 
     cancelBtn.addEventListener('click', ()=>{
@@ -410,6 +400,16 @@
 
     shareBtn.addEventListener('click', ()=>{
       shareList.style.display = shareList.style.display === 'none' ? 'block' : 'none';
+    });
+
+    // Add event listeners for share items
+    const shareItems = modal.querySelectorAll('.cb-share-item');
+    shareItems.forEach(shareItem => {
+      shareItem.addEventListener('click', (e) => {
+        e.preventDefault();
+        const platform = shareItem.getAttribute('data-share');
+        handleShareClick(platform);
+      });
     });
 
     // close on escape
@@ -484,5 +484,206 @@
   sortSelect.addEventListener('change', ()=>{ currentPage = 1; if(useApi) fetchPage(1); else fetchStaticAndRender(); });
 
   populateCategories();
+
+  // QR Code Popup Function
+  async function showQRCodePopup(event) {
+    // Get user info
+    let userName = 'Nume Prenume';
+    try {
+      const userResponse = await fetch((chosenApiBase || '') + '/api/user/demo');
+      if (userResponse.ok) {
+        const userData = await userResponse.json();
+        if (userData.profile && userData.profile.name) {
+          userName = userData.profile.name;
+        }
+      }
+    } catch (error) {
+      console.log('Could not fetch user data');
+    }
+
+    // Generate QR code data (functional URL)
+    const qrUrl = `https://www.eventbrite.com/e/beach-music-festival-${event.id}`;
+    
+    // Create QR popup
+    const popup = document.createElement('div');
+    popup.className = 'reserve-popup';
+    popup.innerHTML = `
+      <div class="reserve-popup-content">
+        <div class="reserve-header">
+          <h2>Rezervare Confirmată</h2>
+          <button class="close-popup">&times;</button>
+        </div>
+        <div class="reserve-body">
+          <div class="qr-section">
+            <div id="qrcode"></div>
+            <p class="qr-code-text">9XLRMKT7VBW3</p>
+          </div>
+          <div class="event-details">
+            <h3>${escapeHtml(event.title || event.Title || '')}</h3>
+            <div class="detail-row">
+              <span class="icon">📍</span>
+              <span>${escapeHtml((event.venue || event.Venue || '') + ', ' + (event.city || event.City || ''))}</span>
+            </div>
+            <div class="detail-row">
+              <span class="icon">📅</span>
+              <span>${event.date || event.Date || ''}</span>
+            </div>
+            <div class="detail-row">
+              <span class="icon">🕐</span>
+              <span>${event.time || event.Time || ''} (cu acces de la ora 17)</span>
+            </div>
+            <div class="detail-row">
+              <span class="icon">👤</span>
+              <span>${userName}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(popup);
+
+    // Generate functional QR code using qrcode.js library
+    const qrContainer = popup.querySelector('#qrcode');
+    generateFunctionalQR(qrContainer, qrUrl);
+
+    // Close popup functionality
+    const closeBtn = popup.querySelector('.close-popup');
+    closeBtn.addEventListener('click', () => {
+      document.body.removeChild(popup);
+    });
+
+    popup.addEventListener('click', (e) => {
+      if (e.target === popup) {
+        document.body.removeChild(popup);
+      }
+    });
+
+    // Reserve the event in backend
+    try {
+      await reserveEvent(event.id || event.Id);
+    } catch (error) {
+      console.log('Error reserving event');
+    }
+  }
+
+  function generateFunctionalQR(container, url) {
+    // Load QR code library and generate functional QR code
+    if (window.QRCode) {
+      // Library already loaded
+      new QRCode(container, {
+        text: url,
+        width: 140,
+        height: 140,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.M
+      });
+    } else {
+      // Load QR code library dynamically
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js';
+      script.onload = () => {
+        // Generate QR code using qrcode library
+        QRCode.toCanvas(container, url, {
+          width: 140,
+          height: 140,
+          color: {
+            dark: '#000000',
+            light: '#ffffff'
+          }
+        }, function (error) {
+          if (error) {
+            console.error('QR Code generation failed:', error);
+            // Fallback to simple pattern
+            generateSimpleQR(container, url);
+          }
+        });
+      };
+      script.onerror = () => {
+        // Fallback if library fails to load
+        generateSimpleQR(container, url);
+      };
+      document.head.appendChild(script);
+    }
+  }
+
+  function handleShareClick(platform) {
+    // Random links for each platform
+    const randomLinks = {
+      facebook: [
+        'https://www.facebook.com/events/',
+        'https://www.facebook.com/pg/CityBeatEvents/events/',
+        'https://www.facebook.com/groups/timisoraevenings/',
+        'https://www.facebook.com/eventsinbucharestro/',
+        'https://www.facebook.com/nightoutbucharest/',
+        'https://www.facebook.com/romanianfestivals/',
+        'https://www.facebook.com/livemusicro/',
+        'https://www.facebook.com/concertebucuresti/',
+        'https://www.facebook.com/muzicalive/',
+        'https://www.facebook.com/teatruinbucuresti/'
+      ],
+      instagram: [
+        'https://www.instagram.com/citybeat_events/',
+        'https://www.instagram.com/explore/tags/timisoraevenings/',
+        'https://www.instagram.com/explore/tags/bucharestevents/',
+        'https://www.instagram.com/explore/tags/romanianculture/',
+        'https://www.instagram.com/explore/tags/livemusicro/',
+        'https://www.instagram.com/explore/tags/concertero/',
+        'https://www.instagram.com/explore/tags/festivals/',
+        'https://www.instagram.com/explore/tags/nightlifero/',
+        'https://www.instagram.com/explore/tags/teatru/',
+        'https://www.instagram.com/explore/tags/artevents/'
+      ],
+      tiktok: [
+        '@citybeat_official',
+        '@romanianmusic',
+        '@bucharestvibes',
+        '@timisoara_life',
+        '@liveconcerts',
+        '@festivalvibes',
+        '@nightlife_ro',
+        '@culturalro',
+        '@eventshappening',
+        '@musiclovers_ro'
+      ]
+    };
+
+    const links = randomLinks[platform];
+    if (!links || links.length === 0) {
+      console.warn(`No links available for platform: ${platform}`);
+      return;
+    }
+
+    // Select random link
+    const randomIndex = Math.floor(Math.random() * links.length);
+    let targetUrl = links[randomIndex];
+
+    // For TikTok, if it starts with @, convert to full URL
+    if (platform === 'tiktok' && targetUrl.startsWith('@')) {
+      targetUrl = `https://www.tiktok.com/${targetUrl}`;
+    }
+
+    // Open in new window/tab
+    window.open(targetUrl, '_blank', 'noopener,noreferrer');
+  }
+
+  function generateSimpleQR(container, data) {
+    // Simple QR code representation using CSS as fallback
+    container.innerHTML = `
+      <div class="qr-grid">
+        ${Array.from({length: 21}, (_, i) => 
+          Array.from({length: 21}, (_, j) => {
+            const isBlack = (i + j + data.length) % 3 === 0 || 
+                          (i % 4 === 0 && j % 4 === 0) ||
+                          (i < 7 && j < 7) ||
+                          (i < 7 && j > 13) ||
+                          (i > 13 && j < 7);
+            return `<div class="qr-cell ${isBlack ? 'black' : 'white'}"></div>`;
+          }).join('')
+        ).join('')}
+      </div>
+    `;
+  }
 
 })();

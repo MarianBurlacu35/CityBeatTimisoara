@@ -1,0 +1,27 @@
+[2025-11-15T18:48:44.1094631Z] TO:marian-cosmin.burlacu@student.tuiasi.ro SUBJECT:Contact form: support
+<p><strong>Nature:</strong> support</p><p><strong>From:</strong> tester@example.com</p><hr/><div>Test message from automated check</div>
+
+[2025-11-15T18:49:34.4323362Z] TO:marian-cosmin.burlacu@student.tuiasi.ro SUBJECT:Contact form: support
+<p><strong>Nature:</strong> support</p><p><strong>From:</strong> tester@example.com</p><hr/><div>Test message from automated check</div>
+
+[2025-11-15T18:51:09.1118883Z] TO:marian-cosmin.burlacu@student.tuiasi.ro SUBJECT:Contact form: support
+<p><strong>Nature:</strong> support</p><p><strong>From:</strong> tester2@example.com</p><hr/><div>Another test, expect logged and OK</div>
+
+[2025-11-15T19:01:14.6721492Z] TO:marian-cosmin.burlacu@student.tuiasi.ro SUBJECT:Contact form: support
+<p><strong>Nature:</strong> support</p><p><strong>From:</strong> testuser@example.com</p><hr/><div>Manual re-run test at 2025-11-15T21:01:14.6279834+02:00</div>
+
+[2025-11-15T19:01:44.3685086Z] TO:marian-cosmin.burlacu@student.tuiasi.ro SUBJECT:Contact form: support
+<p><strong>Nature:</strong> support</p><p><strong>From:</strong> testuser@example.com</p><hr/><div>Manual re-run test at 2025-11-15T21:01:44.3078924+02:00</div>
+
+[2025-11-15T19:02:03.4556179Z] TO:marian-cosmin.burlacu@student.tuiasi.ro SUBJECT:Contact form: support
+<p><strong>Nature:</strong> support</p><p><strong>From:</strong> testuser@example.com</p><hr/><div>Manual re-run test at 2025-11-15T21:01:44.3078924+02:00</div>
+
+[2025-11-15T19:23:46.2564935Z] TO:marian-cosmin.burlacu@student.tuiasi.ro SUBJECT:Contact form: support
+<p><strong>Nature:</strong> support</p><p><strong>From:</strong> tester@example.com</p><hr/><div>Test sending via SMTP (runtime check)</div>
+
+[2025-11-15T19:46:27.4128539Z] TO:marian-cosmin.burlacu@student.tuiasi.ro SUBJECT:Contact form: support FROM:tester@example.com REPLYTO:tester@example.com
+<p><strong>Nature:</strong> support</p><p><strong>From:</strong> tester@example.com</p><hr/><div>Test after disabling SMTP</div>
+
+[2025-11-15T19:47:43.5668935Z] TO:marian-cosmin.burlacu@student.tuiasi.ro SUBJECT:Contact form: support FROM:tester@example.com REPLYTO:tester@example.com
+<p><strong>Nature:</strong> support</p><p><strong>From:</strong> tester@example.com</p><hr/><div>Test contact (post-change)</div>
+

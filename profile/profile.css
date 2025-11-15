@@ -1,0 +1,81 @@
+body{font-family:Inter,Segoe UI,Arial,Helvetica,sans-serif;background:#fafafa;color:#222;margin:0}
+.profile-main{max-width:1000px;margin:40px auto;padding:0 20px}
+.profile-panel{background:#fff;border-radius:10px;padding:24px;box-shadow:0 6px 18px rgba(0,0,0,.06)}
+.profile-grid{display:grid;grid-template-columns:1fr 280px;gap:20px;align-items:start}
+.profile-form label{display:block;font-size:14px;color:#333;margin-bottom:12px}
+.profile-form input[type=text],.profile-form input[type=email],.profile-form textarea{width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:14px}
+.profile-form textarea{min-height:100px}
+.profile-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:8px}
+button.primary{background:#4a0d6b;color:#fff;padding:10px 16px;border-radius:6px;border:0}
+button{padding:8px 12px;border-radius:6px;border:1px solid #ccc;background:#fff}
+.profile-avatar{display:flex;flex-direction:column;align-items:center}
+.avatar-preview{width:220px;height:220px;border-radius:12px;background:#eee;display:flex;align-items:center;justify-content:center;overflow:hidden;border:1px dashed #ddd}
+.avatar-preview img{width:100%;height:100%;object-fit:cover}
+
+/* Stilizare custom pentru input file */
+#avatar-input {
+    display: none; /* Ascunde input-ul default */
+}
+
+.custom-file-upload {
+    display: inline-block;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #4a0d6b, #6a1b8b);
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+    transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 4px 12px rgba(74, 13, 107, 0.3);
+    margin-top: 12px;
+    min-width: 160px;
+    position: relative;
+    overflow: hidden;
+}
+
+.custom-file-upload:hover {
+    background: linear-gradient(135deg, #5a1d7b, #7a2b9b);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(74, 13, 107, 0.4);
+}
+
+.custom-file-upload:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(74, 13, 107, 0.3);
+}
+
+.custom-file-upload::before {
+    content: '📁';
+    margin-right: 8px;
+    font-size: 16px;
+}
+
+.custom-file-upload:hover::before {
+    animation: bounceIcon 0.6s ease;
+}
+
+@keyframes bounceIcon {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+/* Indicare când un fișier este selectat */
+.custom-file-upload.has-file {
+    background: linear-gradient(135deg, #28a745, #34ce57);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.custom-file-upload.has-file::before {
+    content: '✓';
+    color: white;
+}
+
+.custom-file-upload.has-file:hover {
+    background: linear-gradient(135deg, #218838, #28a745);
+    box-shadow: 0 6px 16px rgba(40, 167, 69, 0.4);
+}
+
+@media(max-width:800px){.profile-grid{grid-template-columns:1fr}}
