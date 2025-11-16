@@ -17,7 +17,8 @@
         1,
         41,
         36,
-        22
+        22,
+        21
       ],
       "notifications": [
         {
@@ -606,6 +607,41 @@
           "timestamp": "2025-11-16T08:56:38.417855Z",
           "message": "Reserved a ticket for Blacksmithing Demo",
           "eventId": 22,
+          "read": false
+        },
+        {
+          "id": "76e29ae9-c780-437f-98c6-7ff8e2bb547d",
+          "timestamp": "2025-11-16T10:35:43.2740419Z",
+          "message": "Reserved a ticket for Salsa Dance Night",
+          "eventId": 21,
+          "read": false
+        },
+        {
+          "id": "86d1b86d-e6b8-4b5a-a487-aff916e52160",
+          "timestamp": "2025-11-16T10:41:52.2258483Z",
+          "message": "Saved event: Family Fun Day",
+          "eventId": 12,
+          "read": false
+        },
+        {
+          "id": "c247bdc8-6b0d-43b1-a87d-0d0a6ec296f1",
+          "timestamp": "2025-11-16T10:41:53.3130445Z",
+          "message": "Added to favorites: Family Fun Day",
+          "eventId": 12,
+          "read": false
+        },
+        {
+          "id": "45f8c4cc-d933-404e-b75f-0d1c0868b086",
+          "timestamp": "2025-11-16T10:41:53.8524988Z",
+          "message": "Removed from saved: Family Fun Day",
+          "eventId": 12,
+          "read": false
+        },
+        {
+          "id": "69a21996-2783-444a-983e-1e52df2c1e10",
+          "timestamp": "2025-11-16T10:41:54.2489651Z",
+          "message": "Removed from favorites: Family Fun Day",
+          "eventId": 12,
           "read": false
         }
       ],
