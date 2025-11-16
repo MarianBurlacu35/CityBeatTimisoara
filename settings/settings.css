@@ -1,0 +1,8 @@
+body{font-family:Inter,Segoe UI,Arial,Helvetica,sans-serif;background:#fafafa;color:#222;margin:0}
+.settings-main{max-width:800px;margin:40px auto;padding:0 20px}
+.settings-panel{background:#fff;border-radius:10px;padding:20px;box-shadow:0 6px 18px rgba(0,0,0,.06)}
+.settings-row{padding:12px 0}
+.settings-panel label{font-size:15px}
+.settings-actions{display:flex;justify-content:flex-end;margin-top:10px}
+button.primary{background:#4a0d6b;color:#fff;padding:8px 12px;border-radius:6px;border:0}
+input[type=password]{width:100%;padding:8px;border-radius:6px;border:1px solid #ddd;margin-top:6px}

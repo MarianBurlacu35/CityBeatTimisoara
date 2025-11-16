@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CityBeat — Settings</title>
+  <link rel="stylesheet" href="/header/header.css">
+  <link rel="stylesheet" href="settings.css">
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="settings-main">
+    <section class="settings-panel">
+      <h1>Settings</h1>
+      <div class="settings-row">
+        <label><input id="notif-toggle" type="checkbox"> Enable notifications</label>
+      </div>
+      <hr />
+      <section class="change-pass">
+        <h3>Change password</h3>
+        <label>Current password<input id="cur-pass" type="password" /></label>
+        <label>New password<input id="new-pass" type="password" /></label>
+        <label>Confirm new password<input id="confirm-pass" type="password" /></label>
+        <div class="settings-actions"><button id="btn-pass-change" class="primary">Change password</button></div>
+      </section>
+    </section>
+  </main>
+  <div id="site-footer"></div>
+
+  <script>
+    fetch('/header/header.html').then(r=>r.text()).then(html=>{ document.getElementById('site-header').innerHTML = html; const scripts = document.getElementById('site-header').querySelectorAll('script'); scripts.forEach(s=>{ const ns = document.createElement('script'); if(s.src){ ns.src = s.src; ns.async=false; document.head.appendChild(ns); } else { ns.textContent = s.textContent; document.head.appendChild(ns); } s.remove(); }); });
+    fetch('/footer/footer.html').then(r=>r.text()).then(html=>document.getElementById('site-footer').innerHTML = html).catch(()=>{});
+  </script>
+  <script src="settings.js"></script>
+</body>
+</html>

@@ -22,11 +22,11 @@
 .logo-img{ width:100%; height:100%; object-fit:cover; display: block; }
 .logo-text { margin-left: 12px; font-weight: 700; font-size: 20px; color: #fff; }
 
-.navbar-right { display: flex; align-items: center; gap: 16px; }
+.navbar-right { display: flex; align-items: center; gap: 12px; }
 .nav-link { color: white; text-decoration: none; }
 
-/* reduce spacing between Explore and Create by 2px */
-.nav-link + .nav-link { margin-left: -2px; }
+/* add 15px spacing between Explore and Create buttons */
+.explore-create { display: flex; gap: 15px; align-items: center; }
 /* reduce spacing between login and signup by 2px */
 .btn-login + .btn-signup { margin-left: -2px; }
 
@@ -43,6 +43,90 @@
   text-align: center;
   transition: transform 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
 }
+.auth-buttons{ display:flex; gap:8px; align-items:center }
+
+/* user-buttons (notification + profile) - hidden by default (landing shows auth instead) */
+.user-buttons{ display:none; gap:8px; align-items:center }
+.user-stack{ display:flex; flex-direction:row; align-items:center; gap:15px }
+.user-stack .btn-notif{ background: #D9D9D9; border:none; width:40px; height:40px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; filter: saturate(0.7); }
+.user-stack .btn-notif .icon{ width:18px; height:18px; filter: grayscale(1) brightness(0.6); }
+.user-stack .btn-profile-image{ background: transparent; border:none; width:40px; height:40px; border-radius:50%; padding:0; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; overflow:hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.12) }
+.user-stack .profile-img{ width:100%; height:100%; object-fit:cover; display:block }
+
+/* profile dropdown */
+.profile-dropdown, .notif-panel{ position:absolute; right:20px; top:74px; width:320px; background:#fff; color:#111; border-radius:12px; box-shadow:0 30px 60px rgba(0,0,0,0.2); display:none; z-index:1500 }
+.profile-dropdown .pd-inner{ padding:18px }
+.profile-dropdown .pd-header{ display:flex; align-items:center; gap:12px; margin-bottom:12px }
+.profile-dropdown .pd-header img{ width:46px; height:46px; border-radius:50%; object-fit:cover }
+.profile-dropdown .pd-name{ font-weight:800; font-size:18px }
+.profile-dropdown .pd-sep{ height:1px; background:#eee; margin:12px 0 }
+.profile-dropdown .pd-list{ list-style:none; margin:0; padding:0 }
+.profile-dropdown .pd-list li{ display:flex; justify-content:space-between; align-items:center; padding:10px 6px; cursor:pointer }
+.profile-dropdown .pd-list li:hover{ background:#fafafa }
+.profile-dropdown .pd-list .pd-icon{ width:28px; text-align:left }
+
+/* notification panel */
+.notif-panel{ width:360px; right:60px }
+.notif-panel .np-inner{ max-height:420px; overflow:auto }
+.notif-item{ padding:12px; border-bottom:1px solid #f2f2f2; display:flex; gap:8px; align-items:flex-start }
+.notif-item .ni-time{ color:#888; font-size:12px }
+.notif-badge{ position:absolute; top:-6px; right:-6px; background:#FF3B30; color:#fff; min-width:16px; height:16px; border-radius:16px; font-size:11px; padding:0 4px; display:inline-flex; align-items:center; justify-content:center; box-shadow:0 1px 2px rgba(0,0,0,0.2) }
+
+/* small responsive adjustments */
+@media(max-width:760px){ .profile-dropdown, .notif-panel{ right:8px; left:8px; width:auto } }
+
+/* Search group - hidden by default on injection; pages will toggle visibility */
+.search-group{ position:relative; display:flex; gap:10px; align-items:center; margin-left:18px; flex:1; justify-content:center }
+.search-group .search-input{ background: rgba(255,255,255,0.8); border-radius:999px; display:flex; align-items:center; padding:8px 12px; position:relative }
+.search-group .search-input input{ border:none; outline:none; background:transparent; font-size:14px; color:#222; padding:6px 8px; padding-right:56px /* room for circular button */ }
+.search-group .location-input img.loc-icon{ width:18px; height:18px; margin-right:8px; filter: grayscale(1) brightness(0.6); }
+.search-button{ background:#7514C9; border:none; width:40px; height:40px; border-radius:40px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; box-shadow: 0 6px 14px rgba(117,20,201,0.18); position: absolute; right: 6px; top: 50%; transform: translate(0, -50%); }
+.search-button .search-btn-icon{ width:18px; height:18px; filter: invert(1) brightness(2); }
+
+/* suggestion dropdown aligned under the search input */
+.search-input .search-suggestions{
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 1600;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+  min-width: 260px;
+  max-width: 460px;
+  width: max(320px, 100%);
+  display: none;
+  max-height: 360px;
+  overflow-y: auto;
+  border-radius: 8px;
+  padding: 6px;
+  box-sizing: border-box;
+}
+
+/* suggestion item styles */
+.search-suggestions .sug-item{ padding:8px; display:flex; align-items:center; gap:8px; border-radius:6px }
+.search-suggestions .sug-item .sug-title{ font-weight:700; color:#4a0d6b; }
+.search-suggestions .sug-item .sug-meta{ font-size:12px; color:#666 }
+.search-suggestions .no-match{ padding:14px; color:#666; text-align:center; font-size:13px }
+
+/* simple profile menu (toggled by profile button) */
+.profile-menu{ position:absolute; display:none; width:260px; background:#fff; color:#111; border-radius:10px; box-shadow:0 24px 60px rgba(0,0,0,0.18); padding:12px; z-index:1700 }
+.profile-menu .pm-header{ display:flex; gap:10px; align-items:center; padding-bottom:8px; border-bottom:1px solid #f2f2f2 }
+.profile-menu .pm-header img{ width:48px; height:48px; border-radius:50% }
+.profile-menu .pm-name{ font-weight:800 }
+.profile-menu .pm-email{ font-size:12px; color:#666 }
+.profile-menu .pm-list{ list-style:none; margin:8px 0 0; padding:0 }
+.profile-menu .pm-list li{ padding:10px 8px; cursor:pointer; border-radius:8px }
+.profile-menu .pm-list li:hover{ background:#fafafa }
+
+@media(max-width:760px){
+  .search-input .search-suggestions{ left: 8px; right: 8px; width: auto; min-width: unset; max-width: none; }
+}
+
+.nav-spacer{ flex:1 }
+
+/* collapse search-group on very small screens */
+@media(max-width:760px){ .search-group{ display:none } }
 .btn-login{
   background: #C3A6DC;
   color: #000;

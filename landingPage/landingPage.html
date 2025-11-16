@@ -25,8 +25,8 @@
         </p>
 
         <div class="hero-buttons">
-          <button class="btn-filled">Explore Events</button>
-          <button class="btn-outline-dark">Create Event</button>
+          <a href="#auth-modal" class="btn-filled">Explore Events</a>
+          <a href="#auth-modal" class="btn-outline-dark">Create Event</a>
         </div>
       </div>
     </div>
@@ -75,7 +75,15 @@
     // load the header fragment and insert into the page (from top-level header/ folder)
     fetch('../header/header.html')
       .then(r => r.text())
-      .then(html => { document.getElementById('site-header').innerHTML = html; })
+      .then(html => {
+        document.getElementById('site-header').innerHTML = html;
+  // On landing page show Explore/Create and auth buttons; hide search and user buttons
+  const top = document.querySelector('.top-nav'); if (top) top.style.display = 'none';
+  const search = document.querySelector('.search-group'); if (search) search.style.display = 'none';
+  const userBtns = document.querySelector('.user-buttons'); if (userBtns) userBtns.style.display = 'none';
+  const auth = document.querySelector('.auth-buttons'); if (auth) auth.style.display = 'flex';
+  const exploreGroup = document.querySelector('.explore-create'); if (exploreGroup) exploreGroup.style.display = 'flex';
+      })
       .catch(e => console.warn('Failed to load header:', e));
   </script>
 
